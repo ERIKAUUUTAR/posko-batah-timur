@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Sistem Informasi Posko KKN Kelompok 02</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
     <style>
         :root {
             --primary: #005A9C;
@@ -24,11 +25,15 @@
 
         body { font-family: 'Poppins', sans-serif; background-color: var(--light-bg); color: var(--dark); margin: 0; padding: 0; }
 
-        .header-section { background-color: var(--primary); color: white; padding: 20px; display: flex; align-items: center; justify-content: center; gap: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 25px; }
+        .header-section { background-color: var(--primary); color: white; padding: 20px; display: flex; align-items: center; justify-content: center; gap: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 25px; position: relative; }
         .logo-kkn { width: 70px; height: 70px; object-fit: contain; background-color: transparent; border-radius: 50%; padding: 2px; }
         .header-text { text-align: left; }
         .header-text h1 { margin: 0; font-size: 1.2rem; font-weight: 700; line-height: 1.2; }
         .header-text h2 { margin: 2px 0 0 0; font-size: 0.9rem; font-weight: 400; color: #d1e7dd; }
+        
+        /* Indikator Status MQTT */
+        #mqtt-status { position: absolute; top: 10px; right: 15px; font-size: 11px; font-weight: bold; padding: 4px 8px; border-radius: 20px; background: #dc3545; color: white; }
+        #mqtt-status.connected { background: #198754; }
 
         .container { max-width: 1000px; margin: 0 auto 40px auto; background: var(--card-bg); padding: 25px; border-radius: var(--border-radius); box-shadow: 0 5px 15px rgba(0,0,0,0.05); width: calc(100% - 30px); box-sizing: border-box; }
         
@@ -84,6 +89,7 @@
             .header-text { text-align: center; }
             .header-text h1 { font-size: 1rem; }
             .header-text h2 { font-size: 0.8rem; }
+            #mqtt-status { position: static; display: inline-block; margin-top: 10px; }
             .container { padding: 10px; margin-top: 10px; width: 100%; border-radius: 0; }
             .tabs { flex-direction: column; }
             .action-buttons { justify-content: stretch; }
@@ -112,6 +118,7 @@
 <body>
 
 <header class="header-section">
+    <div id="mqtt-status">Offline</div>
     <img src="https://iili.io/CA65V7S.png" alt="Logo KKN" class="logo-kkn">
     <div class="header-text">
         <h1>KULIAH KERJA NYATA REGULER</h1>
@@ -219,6 +226,70 @@
 </div>
 
 <script>
+    // --- KONFIGURASI MQTT HIVEMQ ---
+    const mqttBrokerUrl = 'wss://5fc256d8cf06470999e59076d5dcc1a6.s1.eu.hivemq.cloud:8884/mqtt';
+    const mqttOptions = {
+        username: 'KKN02',
+        password: 'BatahTimur2',
+        clientId: 'kkn02_web_' + Math.random().toString(16).substr(2, 8),
+        clean: true,
+        connectTimeout: 4000,
+        reconnectPeriod: 1000
+    };
+
+    const topicAbsensi = 'kkn02/data/absensi';
+    const topicTamu = 'kkn02/data/tamu';
+    let mqttClient;
+
+    // --- INISIALISASI KONEKSI MQTT ---
+    function connectMQTT() {
+        mqttClient = mqtt.connect(mqttBrokerUrl, mqttOptions);
+        const statusBadge = document.getElementById('mqtt-status');
+
+        mqttClient.on('connect', function () {
+            console.log('Terkoneksi ke HiveMQ Cloud via WebSocket!');
+            statusBadge.textContent = 'Sinkron (Online)';
+            statusBadge.classList.add('connected');
+
+            // Subscribe ke topik untuk menerima pembaruan dari perangkat lain
+            mqttClient.subscribe(topicAbsensi, { qos: 1 });
+            mqttClient.subscribe(topicTamu, { qos: 1 });
+        });
+
+        mqttClient.on('message', function (topic, message) {
+            try {
+                const payload = JSON.parse(message.toString());
+                
+                // Update state lokal dan render ulang saat ada pesan masuk
+                if (topic === topicAbsensi) {
+                    dataAbsensi = payload;
+                    localStorage.setItem('kkn_absensi', JSON.stringify(dataAbsensi));
+                    renderTabelAbsensi();
+                } else if (topic === topicTamu) {
+                    dataTamu = payload;
+                    localStorage.setItem('kkn_tamu', JSON.stringify(dataTamu));
+                    renderTabelTamu();
+                }
+            } catch (error) {
+                console.error("Gagal memproses pesan MQTT", error);
+            }
+        });
+
+        mqttClient.on('offline', function () {
+            statusBadge.textContent = 'Offline';
+            statusBadge.classList.remove('connected');
+        });
+    }
+
+    // Fungsi untuk mem-publish data ke MQTT (retain = true agar data tersimpan di broker)
+    function publishToMQTT(topic, dataObj) {
+        if (mqttClient && mqttClient.connected) {
+            mqttClient.publish(topic, JSON.stringify(dataObj), { qos: 1, retain: true });
+        }
+    }
+
+
+    // --- DATA & LOGIK APLIKASI SEBELUMNYA ---
     const daftarNama = [
         "Al Hambra Bilal M.", "Firdaushil Hasanah", "Rizal Umami", "Musdalifah Zahratul H.",
         "Gibran Thoifury", "Afifah Dwi Widyastuti", "Ari Dwi Yulianton", "Marcella Maydita",
@@ -301,6 +372,7 @@
 
         renderTabelAbsensi();
         renderTabelTamu();
+        connectMQTT(); // Panggil fungsi koneksi MQTT
     }
 
     function renderTabelAbsensi() {
@@ -350,7 +422,9 @@
 
         if (!dataAbsensi[nama]) dataAbsensi[nama] = {};
         dataAbsensi[nama][hari] = { status: status, alasan: alasan };
+        
         localStorage.setItem('kkn_absensi', JSON.stringify(dataAbsensi));
+        publishToMQTT(topicAbsensi, dataAbsensi); // Push ke MQTT
 
         document.getElementById('inputAlasan').value = '';
         renderTabelAbsensi();
@@ -365,7 +439,9 @@
 
         const waktu = new Date().toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' });
         dataTamu.push({ id: Date.now(), waktu, nama, instansi, keperluan });
+        
         localStorage.setItem('kkn_tamu', JSON.stringify(dataTamu));
+        publishToMQTT(topicTamu, dataTamu); // Push ke MQTT
 
         document.getElementById('namaTamu').value = ''; document.getElementById('instansiTamu').value = ''; document.getElementById('keperluanTamu').value = '';
         renderTabelTamu();
@@ -394,6 +470,7 @@
         if(confirm("Apakah Anda yakin ingin menghapus catatan tamu ini?")) {
             dataTamu = dataTamu.filter(tamu => tamu.id !== id);
             localStorage.setItem('kkn_tamu', JSON.stringify(dataTamu));
+            publishToMQTT(topicTamu, dataTamu); // Push ke MQTT
             renderTabelTamu();
         }
     }
@@ -415,8 +492,18 @@
     function resetData(tipe) {
         let peringatan = tipe === 'absensi' ? "SEMUA data Absensi" : "SEMUA data Buku Tamu";
         if(confirm(`⚠️ AWAS! Anda yakin ingin menghapus ${peringatan} secara permanen? Data yang dihapus tidak dapat dikembalikan.`)) {
-            if(tipe === 'absensi') { localStorage.removeItem('kkn_absensi'); dataAbsensi = {}; renderTabelAbsensi(); } 
-            else { localStorage.removeItem('kkn_tamu'); dataTamu = []; renderTabelTamu(); }
+            if(tipe === 'absensi') { 
+                dataAbsensi = {};
+                localStorage.removeItem('kkn_absensi'); 
+                publishToMQTT(topicAbsensi, dataAbsensi); // Kosongkan di MQTT juga
+                renderTabelAbsensi(); 
+            } 
+            else { 
+                dataTamu = [];
+                localStorage.removeItem('kkn_tamu'); 
+                publishToMQTT(topicTamu, dataTamu); // Kosongkan di MQTT juga
+                renderTabelTamu(); 
+            }
         }
     }
 
