@@ -153,14 +153,14 @@
             <input type="text" id="inputAlasan" placeholder="Contoh: Pulang ke rumah, bimbingan kampus, demam...">
         </div>
 
-        <button class="btn-checkin" onclick="simpanAbsen()">Simpan Data Absen 💾</button>
+        <button class="btn-checkin" onclick="simpanAbsen()"> Absen </button>
 
         <hr style="margin: 35px 0; border: 0; border-top: 2px dashed #dee2e6;">
 
         <h3 class="section-title">Rekapitulasi Kehadiran</h3>
         <div class="action-buttons">
-            <button class="btn-backup" onclick="backupData('absensi')">⬇️ Download Rekap (Excel/JSON)</button>
-            <button class="btn-reset" onclick="resetData('absensi')">🗑️ Reset Absensi</button>
+            <button class="btn-backup" onclick="backupData('absensi')"> Download Rekap Absensi </button>
+            <button class="btn-reset" onclick="resetData('absensi')"> Reset Absensi</button>
         </div>
         
         <div class="table-responsive">
@@ -243,11 +243,11 @@
         { day: 14, date: "11 Juli", m: 6, d: 11, activity: "Persiapan ENGLISH FUN CLASS" },
         { day: 15, date: "12 Juli", m: 6, d: 12, activity: "Observasi ENGLISH FUN CLASS" },
         { day: 16, date: "13 Juli", m: 6, d: 13, activity: "ENGLISH FUN CLASS 1 & Pentas Seni" },
-        { day: 17, date: "14 Juli", m: 6, d: 14, activity: "Rapat BERSIH LINGKUNGAN & EFC 2" },
-        { day: 18, date: "15 Juli", m: 6, d: 15, activity: "Persiapan BERSIH LINGKUNGAN & EFC 3" },
-        { day: 19, date: "16 Juli", m: 6, d: 16, activity: "Gladi bersih BERSIH LINGKUNGAN" },
-        { day: 20, date: "17 Juli", m: 6, d: 17, activity: "Pelaksanaan BERSIH LINGKUNGAN" },
-        { day: 21, date: "18 Juli", m: 6, d: 18, activity: "Evaluasi BERSIH LINGKUNGAN & EFC 4" },
+        { day: 17, date: "14 Juli", m: 6, d: 14, activity: "Rapat Eco Green & EFC 2" },
+        { day: 18, date: "15 Juli", m: 6, d: 15, activity: "Persiapan Eco Green & EFC 3" },
+        { day: 19, date: "16 Juli", m: 6, d: 16, activity: "Gladi bersih Eco Green" },
+        { day: 20, date: "17 Juli", m: 6, d: 17, activity: "Pelaksanaan Eco Green" },
+        { day: 21, date: "18 Juli", m: 6, d: 18, activity: "Evaluasi Eco Green & EFC 4" },
         { day: 22, date: "19 Juli", m: 6, d: 19, activity: "Pengerjaan luaran KKN" },
         { day: 23, date: "20 Juli", m: 6, d: 20, activity: "Pengerjaan luaran KKN" },
         { day: 24, date: "21 Juli", m: 6, d: 21, activity: "Diskusi penutupan" },
@@ -255,7 +255,7 @@
         { day: 26, date: "23 Juli", m: 6, d: 23, activity: "ENGLISH FUN CLASS 5 & Pentas Seni" },
         { day: 27, date: "24 Juli", m: 6, d: 24, activity: "Gladi bersih penutupan" },
         { day: 28, date: "25 Juli", m: 6, d: 25, activity: "Penutupan dan bersih-bersih" },
-        { day: 29, date: "26 Juli", m: 6, d: 26, activity: "PULANKKK" }
+        { day: 29, date: "26 Juli", m: 6, d: 26, activity: "Pulang" }
     ];
 
     let dataAbsensi = JSON.parse(localStorage.getItem('kkn_absensi')) || {};
