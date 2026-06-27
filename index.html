@@ -5,7 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Sistem Informasi Posko KKN Kelompok 02</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
     <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+    
+    <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
+
     <style>
         :root {
             --primary: #005A9C;
@@ -31,7 +35,6 @@
         .header-text h1 { margin: 0; font-size: 1.2rem; font-weight: 700; line-height: 1.2; }
         .header-text h2 { margin: 2px 0 0 0; font-size: 0.9rem; font-weight: 400; color: #d1e7dd; }
         
-        /* Indikator Status MQTT */
         #mqtt-status { position: absolute; top: 10px; right: 15px; font-size: 11px; font-weight: bold; padding: 4px 8px; border-radius: 20px; background: #dc3545; color: white; }
         #mqtt-status.connected { background: #198754; }
 
@@ -55,10 +58,13 @@
         button { width: 100%; padding: 12px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 15px; transition: all 0.3s; font-family: inherit; }
         .btn-checkin { background-color: var(--success); color: white; margin-top: 10px; }
         .btn-checkin:hover { background-color: var(--success-hover); transform: translateY(-2px); }
-        .action-buttons { display: flex; justify-content: flex-end; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
-        .btn-reset { background-color: var(--danger); color: white; width: auto; padding: 8px 15px; font-size: 13px; }
-        .btn-reset:hover { background-color: var(--danger-hover); }
+        
+        .action-buttons { display: flex; justify-content: flex-end; align-items: center; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
         .btn-backup { background-color: var(--info); color: white; width: auto; padding: 8px 15px; font-size: 13px; }
+        
+        .btn-reset { background-color: transparent; color: var(--danger); width: auto; padding: 4px 8px; font-size: 11px; border: 1px solid var(--danger); opacity: 0.7; }
+        .btn-reset:hover { background-color: var(--danger); color: white; opacity: 1; }
+        
         .btn-delete { background-color: var(--danger); color: white; padding: 6px 12px; font-size: 12px; border-radius: 4px; }
 
         .table-responsive { overflow-x: auto; border-radius: 8px; box-shadow: 0 0 0 1px #dee2e6; width: 100%; -webkit-overflow-scrolling: touch; }
@@ -92,8 +98,9 @@
             #mqtt-status { position: static; display: inline-block; margin-top: 10px; }
             .container { padding: 10px; margin-top: 10px; width: 100%; border-radius: 0; }
             .tabs { flex-direction: column; }
-            .action-buttons { justify-content: stretch; }
-            .btn-reset, .btn-backup { width: 100%; text-align: center; margin-bottom: 5px; }
+            .action-buttons { justify-content: space-between; }
+            .btn-backup { width: calc(100% - 70px); text-align: center; margin-bottom: 5px; }
+            .btn-reset { width: 60px; margin-bottom: 5px; padding: 8px 0; }
 
             .desktop-text { display: none !important; }
             .mobile-text { display: inline-block !important; font-weight: bold; font-size: 13px; }
@@ -103,12 +110,7 @@
             #tabelAbsensi th, #tabelAbsensi td { min-width: 35px; }
             
             #tabelAbsensi td:first-child, #tabelAbsensi th:first-child { 
-                min-width: 90px; 
-                max-width: 90px; 
-                font-size: 11px; 
-                white-space: nowrap; 
-                overflow: hidden; 
-                text-overflow: ellipsis; 
+                min-width: 90px; max-width: 90px; font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; 
             }
             .hari-info { font-size: 8px; margin-top: 2px; }
             .teks-alasan { display: none; }
@@ -166,8 +168,8 @@
 
         <h3 class="section-title">Rekapitulasi Kehadiran</h3>
         <div class="action-buttons">
-            <button class="btn-backup" onclick="backupData('absensi')"> Download Rekap Absensi </button>
-            <button class="btn-reset" onclick="resetData('absensi')"> Reset Absensi</button>
+            <button class="btn-backup" onclick="backupData('absensi')">⬇️ Download Excel (XLSX)</button>
+            <button class="btn-reset" onclick="resetData('absensi')">⚠️ Reset</button>
         </div>
         
         <div class="table-responsive">
@@ -204,8 +206,8 @@
 
         <h3 class="section-title">Daftar Riwayat Tamu</h3>
         <div class="action-buttons">
-            <button class="btn-backup" onclick="backupData('tamu')">⬇️ Download Buku Tamu</button>
-            <button class="btn-reset" onclick="resetData('tamu')">🗑️ Bersihkan Riwayat</button>
+            <button class="btn-backup" onclick="backupData('tamu')">⬇️ Download Excel (XLSX)</button>
+            <button class="btn-reset" onclick="resetData('tamu')">⚠️ Reset</button>
         </div>
 
         <div class="table-responsive">
@@ -226,6 +228,9 @@
 </div>
 
 <script>
+    // --- KONFIGURASI PASSWORD RESET ---
+    const KODE_RAHASIA_RESET = "BATAHJAYA02";
+
     // --- KONFIGURASI MQTT HIVEMQ ---
     const mqttBrokerUrl = 'wss://5fc256d8cf06470999e59076d5dcc1a6.s1.eu.hivemq.cloud:8884/mqtt';
     const mqttOptions = {
@@ -241,17 +246,13 @@
     const topicTamu = 'kkn02/data/tamu';
     let mqttClient;
 
-    // --- INISIALISASI KONEKSI MQTT ---
     function connectMQTT() {
         mqttClient = mqtt.connect(mqttBrokerUrl, mqttOptions);
         const statusBadge = document.getElementById('mqtt-status');
 
         mqttClient.on('connect', function () {
-            console.log('Terkoneksi ke HiveMQ Cloud via WebSocket!');
             statusBadge.textContent = 'Sinkron (Online)';
             statusBadge.classList.add('connected');
-
-            // Subscribe ke topik untuk menerima pembaruan dari perangkat lain
             mqttClient.subscribe(topicAbsensi, { qos: 1 });
             mqttClient.subscribe(topicTamu, { qos: 1 });
         });
@@ -259,8 +260,6 @@
         mqttClient.on('message', function (topic, message) {
             try {
                 const payload = JSON.parse(message.toString());
-                
-                // Update state lokal dan render ulang saat ada pesan masuk
                 if (topic === topicAbsensi) {
                     dataAbsensi = payload;
                     localStorage.setItem('kkn_absensi', JSON.stringify(dataAbsensi));
@@ -281,15 +280,12 @@
         });
     }
 
-    // Fungsi untuk mem-publish data ke MQTT (retain = true agar data tersimpan di broker)
     function publishToMQTT(topic, dataObj) {
         if (mqttClient && mqttClient.connected) {
             mqttClient.publish(topic, JSON.stringify(dataObj), { qos: 1, retain: true });
         }
     }
 
-
-    // --- DATA & LOGIK APLIKASI SEBELUMNYA ---
     const daftarNama = [
         "Al Hambra Bilal M.", "Firdaushil Hasanah", "Rizal Umami", "Musdalifah Zahratul H.",
         "Gibran Thoifury", "Afifah Dwi Widyastuti", "Ari Dwi Yulianton", "Marcella Maydita",
@@ -364,7 +360,6 @@
         const currentDate = today.getDate();
         
         const todayAgenda = agendaKKN.find(item => item.m === currentMonth && item.d === currentDate);
-        
         if (todayAgenda) {
             selectHari.value = todayAgenda.day;
             selectHari.disabled = true;
@@ -372,7 +367,7 @@
 
         renderTabelAbsensi();
         renderTabelTamu();
-        connectMQTT(); // Panggil fungsi koneksi MQTT
+        connectMQTT(); 
     }
 
     function renderTabelAbsensi() {
@@ -416,7 +411,7 @@
         const alasan = document.getElementById('inputAlasan').value.trim();
         
         if (dataAbsensi[nama] && dataAbsensi[nama][hari]) {
-            alert(`⚠️ Gagal! ${nama} sudah melakukan pengisian absensi untuk Day ${hari} hari ini. Pengisian hanya diperbolehkan 1 kali saja.`);
+            alert(`⚠️ Gagal! ${nama} sudah melakukan pengisian absensi untuk Day ${hari} hari ini.`);
             return;
         }
 
@@ -424,7 +419,7 @@
         dataAbsensi[nama][hari] = { status: status, alasan: alasan };
         
         localStorage.setItem('kkn_absensi', JSON.stringify(dataAbsensi));
-        publishToMQTT(topicAbsensi, dataAbsensi); // Push ke MQTT
+        publishToMQTT(topicAbsensi, dataAbsensi); 
 
         document.getElementById('inputAlasan').value = '';
         renderTabelAbsensi();
@@ -441,7 +436,7 @@
         dataTamu.push({ id: Date.now(), waktu, nama, instansi, keperluan });
         
         localStorage.setItem('kkn_tamu', JSON.stringify(dataTamu));
-        publishToMQTT(topicTamu, dataTamu); // Push ke MQTT
+        publishToMQTT(topicTamu, dataTamu); 
 
         document.getElementById('namaTamu').value = ''; document.getElementById('instansiTamu').value = ''; document.getElementById('keperluanTamu').value = '';
         renderTabelTamu();
@@ -470,40 +465,93 @@
         if(confirm("Apakah Anda yakin ingin menghapus catatan tamu ini?")) {
             dataTamu = dataTamu.filter(tamu => tamu.id !== id);
             localStorage.setItem('kkn_tamu', JSON.stringify(dataTamu));
-            publishToMQTT(topicTamu, dataTamu); // Push ke MQTT
+            publishToMQTT(topicTamu, dataTamu); 
             renderTabelTamu();
         }
     }
 
+    // --- FUNGSI EXPORT KE EXCEL (XLSX) ---
     function backupData(tipe) {
-        let data, namaFile;
-        if(tipe === 'absensi') { data = dataAbsensi; namaFile = "Backup_Absensi_KKN_02_BatahTimur.json"; } 
-        else { data = dataTamu; namaFile = "Backup_Buku_Tamu_KKN_02_BatahTimur.json"; }
+        let wb = XLSX.utils.book_new(); // Buat workbook excel baru
+        
+        if(tipe === 'absensi') { 
+            // Buat Array untuk Header Kolom Absensi
+            let header = ["No", "Nama Anggota"];
+            agendaKKN.forEach(item => {
+                header.push(`Day ${item.day} (${item.date})`);
+            });
+            
+            // Masukkan data ke format Array 2D
+            let ws_data = [header];
+            daftarNama.forEach((nama, index) => {
+                let row = [index + 1, nama];
+                agendaKKN.forEach(item => {
+                    let statusData = dataAbsensi[nama] && dataAbsensi[nama][item.day] ? dataAbsensi[nama][item.day] : null;
+                    let isiSel = "-";
+                    if (statusData) {
+                        if (typeof statusData === 'object') {
+                            isiSel = statusData.status;
+                            if(statusData.alasan) isiSel += ` (${statusData.alasan})`;
+                        } else {
+                            isiSel = statusData;
+                        }
+                    }
+                    row.push(isiSel);
+                });
+                ws_data.push(row);
+            });
 
-        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data));
-        const downloadAnchorNode = document.createElement('a');
-        downloadAnchorNode.setAttribute("href", dataStr);
-        downloadAnchorNode.setAttribute("download", namaFile);
-        document.body.appendChild(downloadAnchorNode);
-        downloadAnchorNode.click();
-        downloadAnchorNode.remove();
+            // Convert array ke worksheet dan tambahkan ke file excel
+            let ws = XLSX.utils.aoa_to_sheet(ws_data);
+            XLSX.utils.book_append_sheet(wb, ws, "Rekap Absensi");
+            XLSX.writeFile(wb, "Rekap_Absensi_KKN_02_BatahTimur.xlsx");
+            
+        } else {
+            // Pemrosesan untuk Buku Tamu
+            let header = ["No", "Waktu Kunjungan", "Nama Tamu / Rombongan", "Asal / Instansi", "Keperluan"];
+            let ws_data = [header];
+            
+            dataTamu.forEach((tamu, index) => {
+                ws_data.push([
+                    index + 1,
+                    tamu.waktu,
+                    tamu.nama,
+                    tamu.instansi,
+                    tamu.keperluan
+                ]);
+            });
+
+            let ws = XLSX.utils.aoa_to_sheet(ws_data);
+            XLSX.utils.book_append_sheet(wb, ws, "Buku Tamu");
+            XLSX.writeFile(wb, "Buku_Tamu_KKN_02_BatahTimur.xlsx");
+        }
     }
 
     function resetData(tipe) {
         let peringatan = tipe === 'absensi' ? "SEMUA data Absensi" : "SEMUA data Buku Tamu";
-        if(confirm(`⚠️ AWAS! Anda yakin ingin menghapus ${peringatan} secara permanen? Data yang dihapus tidak dapat dikembalikan.`)) {
+        let inputPassword = prompt(`Masukkan KODE RAHASIA untuk mereset ${peringatan}:`);
+        
+        if (inputPassword === null) return;
+        
+        if (inputPassword !== KODE_RAHASIA_RESET) {
+            alert("❌ Gagal! Kode yang Anda masukkan salah.");
+            return;
+        }
+
+        if(confirm(`⚠️ PERINGATAN TERAKHIR!\nAnda yakin ingin menghapus ${peringatan} secara permanen? Data yang dihapus tidak dapat dikembalikan lagi di semua perangkat.`)) {
             if(tipe === 'absensi') { 
                 dataAbsensi = {};
                 localStorage.removeItem('kkn_absensi'); 
-                publishToMQTT(topicAbsensi, dataAbsensi); // Kosongkan di MQTT juga
+                publishToMQTT(topicAbsensi, dataAbsensi); 
                 renderTabelAbsensi(); 
             } 
             else { 
                 dataTamu = [];
                 localStorage.removeItem('kkn_tamu'); 
-                publishToMQTT(topicTamu, dataTamu); // Kosongkan di MQTT juga
+                publishToMQTT(topicTamu, dataTamu); 
                 renderTabelTamu(); 
             }
+            alert("✅ Reset berhasil dilakukan.");
         }
     }
 
