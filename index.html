@@ -36,7 +36,7 @@
         #sidebar.open { left: 0; }
         
         .sidebar-header-brand { background: var(--primary); padding: 25px 20px; color: white; display: flex; align-items: center; gap: 15px; }
-        .sidebar-header-brand img { width: 45px; height: 45px; border-radius: 50%; background: white; padding: 2px; }
+        .sidebar-header-brand img { width: 45px; height: 45px; border-radius: 50%; background: white; padding: 2px; flex-shrink: 0; }
         .sidebar-header-brand div { line-height: 1.2; }
         .sidebar-header-brand h3 { margin: 0; font-size: 14px; font-weight: 700; }
         .sidebar-header-brand p { margin: 2px 0 0 0; font-size: 11px; opacity: 0.9; }
@@ -46,19 +46,92 @@
         .sidebar-link:hover { background: #f8f9fa; color: var(--primary); }
         .sidebar-link.active { background: #eef2f5; color: var(--primary); border-left: 4px solid var(--primary); font-weight: 600; }
         
-        /* ======== HEADER ======== */
-        .header-section { background-color: var(--primary); color: white; padding: 12px 15px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 8px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 900; }
+        /* ======== HEADER (DIPERBAIKI UNTUK ANDROID) ======== */
+        .header-section { 
+            background-color: var(--primary); 
+            color: white; 
+            padding: 10px 15px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: space-between; 
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1); 
+            position: sticky; 
+            top: 0; 
+            z-index: 900; 
+            width: 100%; 
+            box-sizing: border-box; 
+        }
         
-        .header-left { display: flex; align-items: center; gap: 12px; }
-        .btn-menu { background: none; border: none; color: white; font-size: 22px; cursor: pointer; padding: 0; display: flex; align-items: center; transition: transform 0.2s; }
-        .btn-menu:active { transform: scale(0.9); }
+        .header-content-left { 
+            display: flex; 
+            align-items: center; 
+            gap: 12px; 
+            width: calc(100% - 75px); /* Menyisakan ruang paksa untuk tombol MQTT */
+            overflow: hidden; 
+        }
         
-        .logo-header { width: 32px; height: 32px; border-radius: 50%; background: white; padding: 1px; object-fit: contain; }
+        .btn-menu { 
+            background: none; 
+            border: none; 
+            color: white; 
+            font-size: 24px; 
+            cursor: pointer; 
+            padding: 0; margin: 0; 
+            display: flex; 
+            align-items: center; 
+            flex-shrink: 0; 
+        }
         
-        .header-title h1 { margin: 0; font-size: 1rem; font-weight: 600; }
-        .header-title h2 { margin: 0; font-size: 0.75rem; font-weight: 400; color: #d1e7dd; display: none; }
+        .logo-header { 
+            width: 32px; 
+            height: 32px; 
+            border-radius: 50%; 
+            background: white; 
+            padding: 2px; 
+            object-fit: contain; 
+            flex-shrink: 0; 
+        }
         
-        #mqtt-status { font-size: 9px; font-weight: bold; padding: 4px 8px; border-radius: 20px; background: #dc3545; color: white; }
+        .header-titles { 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: center; 
+            overflow: hidden; 
+        }
+        
+        .header-titles h1 { 
+            margin: 0; 
+            font-size: 14px; 
+            font-weight: 600; 
+            white-space: nowrap; 
+            overflow: hidden; 
+            text-overflow: ellipsis; 
+            line-height: 1.2; 
+        }
+        
+        .header-titles h2 { 
+            margin: 0; 
+            font-size: 11px; 
+            font-weight: 400; 
+            color: #d1e7dd; 
+            white-space: nowrap; 
+            overflow: hidden; 
+            text-overflow: ellipsis; 
+            line-height: 1.2; 
+        }
+        
+        .header-content-right { flex-shrink: 0; display: flex; align-items: center; }
+        
+        #mqtt-status { 
+            font-size: 9px; 
+            font-weight: bold; 
+            padding: 4px 8px; 
+            border-radius: 20px; 
+            background: #dc3545; 
+            color: white; 
+            white-space: nowrap; 
+            display: inline-block; 
+        }
         #mqtt-status.connected { background: #198754; }
 
         /* ======== CONTAINER & FORMS ======== */
@@ -76,7 +149,6 @@
         select:focus, input:focus, textarea:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 2px rgba(0, 90, 156, 0.1); }
         select:disabled { background-color: #e2e8f0; color: #64748b; cursor: not-allowed; }
         
-        /* Grid Layout Khusus Form Notulensi agar lebih ringkas */
         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         .divider { border: 0; border-top: 1px dashed #ced4da; margin: 15px 0; }
         .sub-title { font-size: 12px; color: var(--primary); font-weight: 700; margin-bottom: 8px; text-transform: uppercase;}
@@ -117,16 +189,15 @@
 
         /* ======== RESPONSIVE MOBILE EXTREME MINIMALIST ======== */
         @media (max-width: 768px) {
-            .header-section { padding: 10px 12px; }
-            .header-title h1 { font-size: 0.95rem; }
-            .header-title h2 { display: block; font-size: 0.7rem; }
-            .logo-header { width: 28px; height: 28px; }
-            .btn-menu { font-size: 20px; }
+            .header-section { padding: 8px 12px; }
+            .btn-menu { font-size: 22px; }
+            .logo-header { width: 30px; height: 30px; }
+            .header-titles h1 { font-size: 13px; }
+            .header-titles h2 { font-size: 10px; }
             #mqtt-status { font-size: 8px; padding: 3px 6px; }
 
             .container { padding: 12px; margin-top: 10px; width: 100%; border-radius: 0; box-shadow: none; }
-            
-            .grid-2 { grid-template-columns: 1fr; gap: 0; } /* Jadikan 1 kolom di HP agar tidak kekecilan */
+            .grid-2 { grid-template-columns: 1fr; gap: 0; } 
             
             .action-buttons { justify-content: space-between; margin-bottom: 8px; }
             .btn-backup { width: calc(100% - 60px); text-align: center; padding: 8px; font-size: 11px;}
@@ -168,15 +239,17 @@
 </nav>
 
 <header class="header-section">
-    <div class="header-left">
+    <div class="header-content-left">
         <button class="btn-menu" onclick="toggleSidebar()">☰</button>
         <img src="https://iili.io/CA65V7S.png" alt="Logo KKN" class="logo-header">
-        <div class="header-title">
+        <div class="header-titles">
             <h1 id="judul-halaman">Absensi Harian</h1>
             <h2>KKN 02 Batah Timur</h2>
         </div>
     </div>
-    <div id="mqtt-status">Offline</div>
+    <div class="header-content-right">
+        <div id="mqtt-status">Offline</div>
+    </div>
 </header>
 
 <div class="container">
@@ -662,7 +735,6 @@
         localStorage.setItem('kkn_notulensi', JSON.stringify(dataNotulensi));
         publishToMQTT(topicNotulensi, dataNotulensi); 
 
-        // Reset textareas
         ['topikNotulensi','sieAcara','sieHumas','siePDD','sieKonsumsi','siePerkap','hasilRapat','tindakLanjut'].forEach(id => {
             document.getElementById(id).value = '';
         });
