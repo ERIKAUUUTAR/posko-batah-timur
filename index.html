@@ -7,7 +7,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     
     <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
-    
     <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
 
     <style>
@@ -24,151 +23,198 @@
             --dark: #2c3e50;
             --light-bg: #eef2f5;
             --card-bg: #ffffff;
-            --border-radius: 12px;
+            --border-radius: 10px;
         }
 
-        body { font-family: 'Poppins', sans-serif; background-color: var(--light-bg); color: var(--dark); margin: 0; padding: 0; }
+        body { font-family: 'Poppins', sans-serif; background-color: var(--light-bg); color: var(--dark); margin: 0; padding: 0; overflow-x: hidden; }
 
-        .header-section { background-color: var(--primary); color: white; padding: 20px; display: flex; align-items: center; justify-content: center; gap: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 25px; position: relative; }
-        .logo-kkn { width: 70px; height: 70px; object-fit: contain; background-color: transparent; border-radius: 50%; padding: 2px; }
-        .header-text { text-align: left; }
-        .header-text h1 { margin: 0; font-size: 1.2rem; font-weight: 700; line-height: 1.2; }
-        .header-text h2 { margin: 2px 0 0 0; font-size: 0.9rem; font-weight: 400; color: #d1e7dd; }
+        /* ======== SIDEBAR MENU ======== */
+        #sidebar-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.5); z-index: 998; display: none; opacity: 0; transition: opacity 0.3s; }
+        #sidebar-overlay.show { display: block; opacity: 1; }
         
-        #mqtt-status { position: absolute; top: 10px; right: 15px; font-size: 11px; font-weight: bold; padding: 4px 8px; border-radius: 20px; background: #dc3545; color: white; }
+        #sidebar { position: fixed; top: 0; left: -260px; width: 250px; height: 100vh; background: var(--card-bg); box-shadow: 2px 0 15px rgba(0,0,0,0.1); transition: left 0.3s ease-in-out; z-index: 999; display: flex; flex-direction: column; overflow-y: auto; }
+        #sidebar.open { left: 0; }
+        
+        .sidebar-header-brand { background: var(--primary); padding: 25px 20px; color: white; display: flex; align-items: center; gap: 15px; }
+        .sidebar-header-brand img { width: 45px; height: 45px; border-radius: 50%; background: white; padding: 2px; }
+        .sidebar-header-brand div { line-height: 1.2; }
+        .sidebar-header-brand h3 { margin: 0; font-size: 14px; font-weight: 700; }
+        .sidebar-header-brand p { margin: 2px 0 0 0; font-size: 11px; opacity: 0.9; }
+
+        .sidebar-menu { padding: 10px 0; }
+        .sidebar-link { display: flex; align-items: center; gap: 10px; padding: 12px 25px; text-decoration: none; color: #495057; font-weight: 500; font-size: 13px; transition: all 0.2s; border-left: 4px solid transparent; }
+        .sidebar-link:hover { background: #f8f9fa; color: var(--primary); }
+        .sidebar-link.active { background: #eef2f5; color: var(--primary); border-left: 4px solid var(--primary); font-weight: 600; }
+        
+        /* ======== HEADER ======== */
+        .header-section { background-color: var(--primary); color: white; padding: 12px 15px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 8px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 900; }
+        
+        .header-left { display: flex; align-items: center; gap: 12px; }
+        .btn-menu { background: none; border: none; color: white; font-size: 22px; cursor: pointer; padding: 0; display: flex; align-items: center; transition: transform 0.2s; }
+        .btn-menu:active { transform: scale(0.9); }
+        
+        .logo-header { width: 32px; height: 32px; border-radius: 50%; background: white; padding: 1px; object-fit: contain; }
+        
+        .header-title h1 { margin: 0; font-size: 1rem; font-weight: 600; }
+        .header-title h2 { margin: 0; font-size: 0.75rem; font-weight: 400; color: #d1e7dd; display: none; }
+        
+        #mqtt-status { font-size: 9px; font-weight: bold; padding: 4px 8px; border-radius: 20px; background: #dc3545; color: white; }
         #mqtt-status.connected { background: #198754; }
 
-        .container { max-width: 1000px; margin: 0 auto 40px auto; background: var(--card-bg); padding: 25px; border-radius: var(--border-radius); box-shadow: 0 5px 15px rgba(0,0,0,0.05); width: calc(100% - 30px); box-sizing: border-box; }
+        /* ======== CONTAINER & FORMS ======== */
+        .container { max-width: 1000px; margin: 15px auto 30px auto; background: var(--card-bg); padding: 20px; border-radius: var(--border-radius); box-shadow: 0 2px 10px rgba(0,0,0,0.05); width: calc(100% - 30px); box-sizing: border-box; }
         
-        .tabs { display: flex; margin-bottom: 25px; background: #f8f9fa; border-radius: 8px; padding: 5px; gap: 5px; }
-        .tab-btn { flex: 1; background: none; border: none; padding: 12px; font-size: 14px; font-weight: 600; cursor: pointer; color: #6c757d; border-radius: 6px; transition: all 0.3s ease; }
-        .tab-btn:hover { color: var(--primary); background-color: #e9ecef; }
-        .tab-btn.active { color: white; background-color: var(--primary); box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         .tab-content { display: none; }
-        .tab-content.active { display: block; animation: fadeIn 0.4s ease-in-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .tab-content.active { display: block; animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
-        h3.section-title { text-align: center; color: var(--primary); margin-bottom: 20px; font-size: 1.3rem; }
-        .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 6px; font-weight: 600; font-size: 13px; color: #495057; }
-        select, input { width: 100%; padding: 12px 15px; border: 1px solid #ced4da; border-radius: 8px; font-size: 14px; box-sizing: border-box; font-family: inherit; transition: border-color 0.3s; }
-        select:focus, input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(0, 90, 156, 0.1); }
+        h3.section-title { text-align: center; color: var(--primary); margin-bottom: 20px; font-size: 1.15rem; }
+        .form-group { margin-bottom: 12px; }
+        label { display: block; margin-bottom: 4px; font-weight: 600; font-size: 12px; color: #495057; }
+        select, input, textarea { width: 100%; padding: 10px 12px; border: 1px solid #ced4da; border-radius: 6px; font-size: 13px; box-sizing: border-box; font-family: inherit; transition: border-color 0.3s; }
+        textarea { resize: vertical; min-height: 50px; }
+        select:focus, input:focus, textarea:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 2px rgba(0, 90, 156, 0.1); }
         select:disabled { background-color: #e2e8f0; color: #64748b; cursor: not-allowed; }
         
-        button { width: 100%; padding: 12px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 15px; transition: all 0.3s; font-family: inherit; }
-        .btn-checkin { background-color: var(--success); color: white; margin-top: 10px; }
-        .btn-checkin:hover { background-color: var(--success-hover); transform: translateY(-2px); }
+        /* Grid Layout Khusus Form Notulensi agar lebih ringkas */
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .divider { border: 0; border-top: 1px dashed #ced4da; margin: 15px 0; }
+        .sub-title { font-size: 12px; color: var(--primary); font-weight: 700; margin-bottom: 8px; text-transform: uppercase;}
+
+        button { width: 100%; padding: 10px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 13px; transition: all 0.3s; font-family: inherit; }
+        .btn-checkin { background-color: var(--success); color: white; margin-top: 5px; }
+        .btn-checkin:hover { background-color: var(--success-hover); }
         
-        .action-buttons { display: flex; justify-content: flex-end; align-items: center; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
-        .btn-backup { background-color: var(--info); color: white; width: auto; padding: 8px 15px; font-size: 13px; }
-        
+        .action-buttons { display: flex; justify-content: flex-end; align-items: center; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+        .btn-backup { background-color: var(--info); color: white; width: auto; padding: 6px 12px; font-size: 11px; }
         .btn-reset { background-color: transparent; color: var(--danger); width: auto; padding: 4px 8px; font-size: 11px; border: 1px solid var(--danger); opacity: 0.7; }
         .btn-reset:hover { background-color: var(--danger); color: white; opacity: 1; }
-        
-        .btn-delete { background-color: var(--danger); color: white; padding: 6px 12px; font-size: 12px; border-radius: 4px; }
+        .btn-delete { background-color: var(--danger); color: white; padding: 4px 8px; font-size: 11px; border-radius: 4px; }
 
-        .table-responsive { overflow-x: auto; border-radius: 8px; box-shadow: 0 0 0 1px #dee2e6; width: 100%; -webkit-overflow-scrolling: touch; }
-        .table-responsive::-webkit-scrollbar { height: 8px; }
-        .table-responsive::-webkit-scrollbar-thumb { background: #adb5bd; border-radius: 4px; }
+        .table-responsive { overflow-x: auto; border-radius: 6px; box-shadow: 0 0 0 1px #dee2e6; width: 100%; -webkit-overflow-scrolling: touch; }
         table { width: 100%; border-collapse: collapse; background: white; }
-        #tabelAbsensi { min-width: 2500px; }
-        #tabelTamu { min-width: 700px; }
-        th, td { border: 1px solid #dee2e6; padding: 12px 10px; text-align: center; font-size: 13px; vertical-align: middle; }
+        #tabelAbsensi { min-width: 2000px; }
+        #tabelTamu { min-width: 600px; }
+        #tabelNotulensi { min-width: 1500px; }
+        
+        th, td { border: 1px solid #dee2e6; padding: 8px; text-align: center; font-size: 11px; vertical-align: middle; }
         th { background-color: var(--primary); color: white; position: sticky; top: 0; z-index: 2; font-weight: 500; }
         
-        #tabelAbsensi td:first-child, #tabelAbsensi th:first-child { position: sticky; left: 0; font-weight: 600; z-index: 3; background-color: #f8f9fa; border-right: 2px solid #dee2e6; min-width: 130px; text-align: left; }
-        #tabelAbsensi th:first-child { background-color: var(--primary); color: white; z-index: 4; text-align: center;}
+        #tabelAbsensi td:first-child, #tabelAbsensi th:first-child,
+        #tabelNotulensi td:first-child, #tabelNotulensi th:first-child { position: sticky; left: 0; font-weight: 600; z-index: 3; background-color: #f8f9fa; border-right: 2px solid #dee2e6; }
+        #tabelAbsensi th:first-child, #tabelNotulensi th:first-child { background-color: var(--primary); color: white; z-index: 4; text-align: center;}
         
-        .hari-info { font-size: 10px; font-weight: 400; display: block; margin-top: 4px; color: #a1c6ea; }
+        .hari-info { font-size: 9px; font-weight: 400; display: block; margin-top: 2px; color: #a1c6ea; }
         .status-hadir { background-color: #d1e7dd; color: #0f5132; font-weight: 600; }
         .status-izin { background-color: #fff3cd; color: #664d03; font-weight: 600; }
         .status-sakit { background-color: #f8d7da; color: #842029; font-weight: 600; }
         .status-alfa { background-color: #e2e3e5; color: #41464b; font-weight: 600; }
         .belum { color: #adb5bd; }
-        .teks-alasan { font-size: 10px; font-weight: 400; color: #6c757d; display: block; margin-top: 5px; font-style: italic; line-height: 1.3; }
+        .teks-alasan { font-size: 9px; font-weight: 400; color: #6c757d; display: block; margin-top: 3px; font-style: italic; }
         
         .desktop-text { display: block; }
         .mobile-text { display: none; }
 
+        /* ======== RESPONSIVE MOBILE EXTREME MINIMALIST ======== */
         @media (max-width: 768px) {
-            .header-section { flex-direction: column; text-align: center; padding: 15px; margin-bottom: 15px; }
-            .header-text { text-align: center; }
-            .header-text h1 { font-size: 1rem; }
-            .header-text h2 { font-size: 0.8rem; }
-            #mqtt-status { position: static; display: inline-block; margin-top: 10px; }
-            .container { padding: 10px; margin-top: 10px; width: 100%; border-radius: 0; }
-            .tabs { flex-direction: column; }
-            .action-buttons { justify-content: space-between; }
-            .btn-backup { width: calc(100% - 70px); text-align: center; margin-bottom: 5px; }
-            .btn-reset { width: 60px; margin-bottom: 5px; padding: 8px 0; }
+            .header-section { padding: 10px 12px; }
+            .header-title h1 { font-size: 0.95rem; }
+            .header-title h2 { display: block; font-size: 0.7rem; }
+            .logo-header { width: 28px; height: 28px; }
+            .btn-menu { font-size: 20px; }
+            #mqtt-status { font-size: 8px; padding: 3px 6px; }
+
+            .container { padding: 12px; margin-top: 10px; width: 100%; border-radius: 0; box-shadow: none; }
+            
+            .grid-2 { grid-template-columns: 1fr; gap: 0; } /* Jadikan 1 kolom di HP agar tidak kekecilan */
+            
+            .action-buttons { justify-content: space-between; margin-bottom: 8px; }
+            .btn-backup { width: calc(100% - 60px); text-align: center; padding: 8px; font-size: 11px;}
+            .btn-reset { width: 50px; padding: 8px 0; font-size: 10px;}
 
             .desktop-text { display: none !important; }
-            .mobile-text { display: inline-block !important; font-weight: bold; font-size: 13px; }
+            .mobile-text { display: inline-block !important; font-weight: bold; font-size: 11px; }
 
             #tabelAbsensi { min-width: auto; }
-            th, td { padding: 8px 4px !important; font-size: 11px; }
-            #tabelAbsensi th, #tabelAbsensi td { min-width: 35px; }
+            th, td { padding: 6px 4px !important; font-size: 10px; }
+            #tabelAbsensi th, #tabelAbsensi td { min-width: 32px; }
             
             #tabelAbsensi td:first-child, #tabelAbsensi th:first-child { 
-                min-width: 90px; max-width: 90px; font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; 
+                min-width: 80px; max-width: 80px; font-size: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; 
             }
-            .hari-info { font-size: 8px; margin-top: 2px; }
+            .hari-info { font-size: 7px; margin-top: 1px; }
             .teks-alasan { display: none; }
+            
+            #tabelNotulensi td:nth-child(2) { min-width: 120px; }
         }
     </style>
 </head>
 <body>
 
-<header class="header-section">
-    <div id="mqtt-status">Offline</div>
-    <img src="https://iili.io/CA65V7S.png" alt="Logo KKN" class="logo-kkn">
-    <div class="header-text">
-        <h1>KULIAH KERJA NYATA REGULER</h1>
-        <h2>KELOMPOK 02 DESA BATAH TIMUR</h2>
+<div id="sidebar-overlay" onclick="toggleSidebar()"></div>
+<nav id="sidebar">
+    <div class="sidebar-header-brand">
+        <img src="https://iili.io/CA65V7S.png" alt="Logo KKN">
+        <div>
+            <h3>Sistem Posko</h3>
+            <p>KKN 02 Batah Timur</p>
+        </div>
     </div>
+    <div class="sidebar-menu">
+        <a href="#" class="sidebar-link active" onclick="switchTab('absensi', this)">📅 Absensi Harian</a>
+        <a href="#" class="sidebar-link" onclick="switchTab('bukutamu', this)">📖 Buku Tamu</a>
+        <a href="#" class="sidebar-link" onclick="switchTab('notulensi', this)">📝 Notulensi Rapat</a>
+    </div>
+</nav>
+
+<header class="header-section">
+    <div class="header-left">
+        <button class="btn-menu" onclick="toggleSidebar()">☰</button>
+        <img src="https://iili.io/CA65V7S.png" alt="Logo KKN" class="logo-header">
+        <div class="header-title">
+            <h1 id="judul-halaman">Absensi Harian</h1>
+            <h2>KKN 02 Batah Timur</h2>
+        </div>
+    </div>
+    <div id="mqtt-status">Offline</div>
 </header>
 
 <div class="container">
-    <div class="tabs">
-        <button class="tab-btn active" onclick="switchTab('absensi')">📅 Absensi Harian</button>
-        <button class="tab-btn" onclick="switchTab('bukutamu')">📖 Buku Tamu</button>
-    </div>
-
+    
     <div id="tab-absensi" class="tab-content active">
-        <h3 class="section-title">Form Check-In Absensi</h3>
+        <h3 class="section-title">Form Check-In</h3>
 
         <div class="form-group">
-            <label for="pilihNama">Nama Anggota:</label>
+            <label>Nama Anggota:</label>
             <select id="pilihNama"></select>
         </div>
 
         <div class="form-group">
-            <label for="pilihHari">Pilih Jadwal Kegiatan (Dikunci Otomatis Sesuai Tanggal HP):</label>
+            <label>Jadwal Kegiatan (Terkunci Otomatis):</label>
             <select id="pilihHari"></select>
         </div>
 
         <div class="form-group">
-            <label for="pilihStatus">Keterangan / Status:</label>
+            <label>Status Kehadiran:</label>
             <select id="pilihStatus" onchange="toggleAlasan()">
                 <option value="Hadir">Hadir ✔️</option>
-                <option value="Izin">Izin (Ada keperluan lain)</option>
+                <option value="Izin">Izin (Keperluan lain)</option>
                 <option value="Sakit">Sakit 🤒</option>
-                <option value="Alfa">Tanpa Keterangan (Alfa) ❌</option>
+                <option value="Alfa">Alfa ❌</option>
             </select>
         </div>
 
         <div class="form-group" id="grupAlasan" style="display: none;">
-            <label for="inputAlasan">Ketik Alasan Spesifik (Opsional):</label>
-            <input type="text" id="inputAlasan" placeholder="Contoh: Pulang ke rumah, bimbingan kampus, demam...">
+            <label>Ketik Alasan Singkat:</label>
+            <input type="text" id="inputAlasan" placeholder="Cth: Bimbingan dosen, Demam...">
         </div>
 
-        <button class="btn-checkin" onclick="simpanAbsen()"> Absen </button>
+        <button class="btn-checkin" onclick="simpanAbsen()">Simpan Absen</button>
 
-        <hr style="margin: 35px 0; border: 0; border-top: 2px dashed #dee2e6;">
+        <hr class="divider">
 
-        <h3 class="section-title">Rekapitulasi Kehadiran</h3>
         <div class="action-buttons">
-            <button class="btn-backup" onclick="backupData('absensi')">⬇️ Download Excel (XLSX)</button>
+            <button class="btn-backup" onclick="backupData('absensi')">⬇️ Download Excel</button>
             <button class="btn-reset" onclick="resetData('absensi')">⚠️ Reset</button>
         </div>
         
@@ -185,28 +231,27 @@
     </div>
 
     <div id="tab-bukutamu" class="tab-content">
-        <h3 class="section-title">Form Kunjungan Tamu</h3>
+        <h3 class="section-title">Buku Tamu</h3>
 
         <div class="form-group">
-            <label for="namaTamu">Nama Tamu / Rombongan:</label>
-            <input type="text" id="namaTamu" placeholder="Contoh: Pak Kepala Desa / DPL">
+            <label>Nama Tamu / Rombongan:</label>
+            <input type="text" id="namaTamu" placeholder="Cth: DPL / Warga">
         </div>
         <div class="form-group">
-            <label for="instansiTamu">Asal / Instansi:</label>
-            <input type="text" id="instansiTamu" placeholder="Contoh: Warga Dusun A / Kampus UTM">
+            <label>Asal / Instansi:</label>
+            <input type="text" id="instansiTamu" placeholder="Cth: Kampus / Dusun A">
         </div>
         <div class="form-group">
-            <label for="keperluanTamu">Keperluan Kunjungan:</label>
-            <input type="text" id="keperluanTamu" placeholder="Contoh: Evaluasi proker / Silaturahmi">
+            <label>Keperluan:</label>
+            <input type="text" id="keperluanTamu" placeholder="Cth: Evaluasi Proker">
         </div>
 
-        <button class="btn-checkin" onclick="simpanTamu()" style="background-color: var(--primary);">Catat Buku Tamu 📝</button>
+        <button class="btn-checkin" onclick="simpanTamu()" style="background-color: var(--primary);">Catat Tamu</button>
 
-        <hr style="margin: 35px 0; border: 0; border-top: 2px dashed #dee2e6;">
+        <hr class="divider">
 
-        <h3 class="section-title">Daftar Riwayat Tamu</h3>
         <div class="action-buttons">
-            <button class="btn-backup" onclick="backupData('tamu')">⬇️ Download Excel (XLSX)</button>
+            <button class="btn-backup" onclick="backupData('tamu')">⬇️ Download Excel</button>
             <button class="btn-reset" onclick="resetData('tamu')">⚠️ Reset</button>
         </div>
 
@@ -214,24 +259,103 @@
             <table id="tabelTamu">
                 <thead>
                     <tr>
-                        <th style="width: 150px;">Waktu Kunjungan</th>
-                        <th>Nama Tamu</th>
-                        <th>Asal / Instansi</th>
+                        <th style="width: 100px;">Waktu</th>
+                        <th>Nama</th>
+                        <th>Instansi</th>
                         <th>Keperluan</th>
-                        <th style="width: 80px;">Aksi</th>
+                        <th style="width: 60px;">Aksi</th>
                     </tr>
                 </thead>
                 <tbody id="bodyTamu"></tbody>
             </table>
         </div>
     </div>
+
+    <div id="tab-notulensi" class="tab-content">
+        <h3 class="section-title">Notulensi Rapat</h3>
+
+        <div class="form-group">
+            <label>Tanggal Rapat:</label>
+            <input type="date" id="tglNotulensi">
+        </div>
+        <div class="form-group">
+            <label>Agenda / Topik Utama:</label>
+            <input type="text" id="topikNotulensi" placeholder="Cth: Rapat Persiapan Pentas Seni">
+        </div>
+
+        <hr class="divider">
+        <div class="sub-title">▶ Laporan Divisi (Sie)</div>
+        
+        <div class="grid-2">
+            <div class="form-group">
+                <label>Sie Acara:</label>
+                <textarea id="sieAcara" rows="2" placeholder="Catatan Sie Acara..."></textarea>
+            </div>
+            <div class="form-group">
+                <label>Sie Humas:</label>
+                <textarea id="sieHumas" rows="2" placeholder="Catatan Sie Humas..."></textarea>
+            </div>
+            <div class="form-group">
+                <label>Sie PDD:</label>
+                <textarea id="siePDD" rows="2" placeholder="Catatan Sie PDD..."></textarea>
+            </div>
+            <div class="form-group">
+                <label>Sie Konsumsi:</label>
+                <textarea id="sieKonsumsi" rows="2" placeholder="Catatan Sie Konsumsi..."></textarea>
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Sie Perkap:</label>
+            <textarea id="siePerkap" rows="2" placeholder="Catatan Sie Perlengkapan..."></textarea>
+        </div>
+
+        <hr class="divider">
+        <div class="sub-title">▶ Kesimpulan</div>
+
+        <div class="form-group">
+            <label>Hasil Keputusan Rapat:</label>
+            <textarea id="hasilRapat" rows="3" placeholder="Poin-poin keputusan akhir..."></textarea>
+        </div>
+        <div class="form-group">
+            <label>Tindak Lanjut (Follow-up):</label>
+            <textarea id="tindakLanjut" rows="2" placeholder="Hal yang harus segera dikerjakan..."></textarea>
+        </div>
+
+        <button class="btn-checkin" onclick="simpanNotulensi()" style="background-color: var(--dark);">Simpan Notulensi</button>
+
+        <hr class="divider">
+
+        <div class="action-buttons">
+            <button class="btn-backup" onclick="backupData('notulensi')">⬇️ Download Excel</button>
+            <button class="btn-reset" onclick="resetData('notulensi')">⚠️ Reset</button>
+        </div>
+
+        <div class="table-responsive">
+            <table id="tabelNotulensi">
+                <thead>
+                    <tr>
+                        <th style="min-width: 80px;">Tanggal</th>
+                        <th style="min-width: 150px;">Agenda</th>
+                        <th style="min-width: 120px;">Sie Acara</th>
+                        <th style="min-width: 120px;">Sie Humas</th>
+                        <th style="min-width: 120px;">Sie PDD</th>
+                        <th style="min-width: 120px;">Sie Konsumsi</th>
+                        <th style="min-width: 120px;">Sie Perkap</th>
+                        <th style="min-width: 150px;">Keputusan Rapat</th>
+                        <th style="min-width: 120px;">Tindak Lanjut</th>
+                        <th style="width: 60px;">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody id="bodyNotulensi"></tbody>
+            </table>
+        </div>
+    </div>
+
 </div>
 
 <script>
-    // --- KONFIGURASI PASSWORD RESET ---
     const KODE_RAHASIA_RESET = "BATAHJAYA02";
 
-    // --- KONFIGURASI MQTT HIVEMQ ---
     const mqttBrokerUrl = 'wss://5fc256d8cf06470999e59076d5dcc1a6.s1.eu.hivemq.cloud:8884/mqtt';
     const mqttOptions = {
         username: 'KKN02',
@@ -244,6 +368,7 @@
 
     const topicAbsensi = 'kkn02/data/absensi';
     const topicTamu = 'kkn02/data/tamu';
+    const topicNotulensi = 'kkn02/data/notulensi';
     let mqttClient;
 
     function connectMQTT() {
@@ -251,10 +376,11 @@
         const statusBadge = document.getElementById('mqtt-status');
 
         mqttClient.on('connect', function () {
-            statusBadge.textContent = 'Sinkron (Online)';
+            statusBadge.textContent = 'Sinkron';
             statusBadge.classList.add('connected');
             mqttClient.subscribe(topicAbsensi, { qos: 1 });
             mqttClient.subscribe(topicTamu, { qos: 1 });
+            mqttClient.subscribe(topicNotulensi, { qos: 1 });
         });
 
         mqttClient.on('message', function (topic, message) {
@@ -268,10 +394,12 @@
                     dataTamu = payload;
                     localStorage.setItem('kkn_tamu', JSON.stringify(dataTamu));
                     renderTabelTamu();
+                } else if (topic === topicNotulensi) {
+                    dataNotulensi = payload;
+                    localStorage.setItem('kkn_notulensi', JSON.stringify(dataNotulensi));
+                    renderTabelNotulensi();
                 }
-            } catch (error) {
-                console.error("Gagal memproses pesan MQTT", error);
-            }
+            } catch (error) { console.error("Error MQTT", error); }
         });
 
         mqttClient.on('offline', function () {
@@ -294,56 +422,59 @@
     ];
 
     const agendaKKN = [
-        { day: 1, date: "28 Juni", m: 5, d: 28, activity: "Keberangkatan" },
-        { day: 2, date: "29 Juni", m: 5, d: 29, activity: "Sowan" },
-        { day: 3, date: "30 Juni", m: 5, d: 30, activity: "Observasi lingkungan dan FGD" },
-        { day: 4, date: "1 Juli", m: 6, d: 1, activity: "Q time + diskusi + gladi" },
-        { day: 5, date: "2 Juli", m: 6, d: 2, activity: "Pembukaan" },
-        { day: 6, date: "3 Juli", m: 6, d: 3, activity: "Visit QRIS GOES TO UMKM (2 dusun)" },
-        { day: 7, date: "4 Juli", m: 6, d: 4, activity: "Visit QRIS GOES TO UMKM (2 dusun)" },
-        { day: 8, date: "5 Juli", m: 6, d: 5, activity: "Visit QRIS GOES TO UMKM (1 dusun)" },
-        { day: 9, date: "6 Juli", m: 6, d: 6, activity: "Diskusi proker SERTIFIKASI HALAL" },
-        { day: 10, date: "7 Juli", m: 6, d: 7, activity: "Persiapan SERTIFIKASI HALAL UMKM" },
-        { day: 11, date: "8 Juli", m: 6, d: 8, activity: "Gladi bersih SERTIFIKASI HALAL" },
-        { day: 12, date: "9 Juli", m: 6, d: 9, activity: "Pelaksanaan SERTIFIKASI HALAL UMKM" },
-        { day: 13, date: "10 Juli", m: 6, d: 10, activity: "Evaluasi & Rapat ENGLISH FUN CLASS" },
-        { day: 14, date: "11 Juli", m: 6, d: 11, activity: "Persiapan ENGLISH FUN CLASS" },
-        { day: 15, date: "12 Juli", m: 6, d: 12, activity: "Observasi ENGLISH FUN CLASS" },
-        { day: 16, date: "13 Juli", m: 6, d: 13, activity: "ENGLISH FUN CLASS 1 & Pentas Seni" },
-        { day: 17, date: "14 Juli", m: 6, d: 14, activity: "Rapat Eco Green & EFC 2" },
-        { day: 18, date: "15 Juli", m: 6, d: 15, activity: "Persiapan Eco Green & EFC 3" },
-        { day: 19, date: "16 Juli", m: 6, d: 16, activity: "Gladi bersih Eco Green" },
-        { day: 20, date: "17 Juli", m: 6, d: 17, activity: "Pelaksanaan Eco Green" },
-        { day: 21, date: "18 Juli", m: 6, d: 18, activity: "Evaluasi Eco Green & EFC 4" },
-        { day: 22, date: "19 Juli", m: 6, d: 19, activity: "Pengerjaan luaran KKN" },
-        { day: 23, date: "20 Juli", m: 6, d: 20, activity: "Pengerjaan luaran KKN" },
-        { day: 24, date: "21 Juli", m: 6, d: 21, activity: "Diskusi penutupan" },
-        { day: 25, date: "22 Juli", m: 6, d: 22, activity: "Persiapan penutupan" },
-        { day: 26, date: "23 Juli", m: 6, d: 23, activity: "ENGLISH FUN CLASS 5 & Pentas Seni" },
-        { day: 27, date: "24 Juli", m: 6, d: 24, activity: "Gladi bersih penutupan" },
-        { day: 28, date: "25 Juli", m: 6, d: 25, activity: "Penutupan dan bersih-bersih" },
-        { day: 29, date: "26 Juli", m: 6, d: 26, activity: "Pulang" }
+        { day: 1, date: "28 Jun", m: 5, d: 28, activity: "Keberangkatan" },
+        { day: 2, date: "29 Jun", m: 5, d: 29, activity: "Sowan" },
+        { day: 3, date: "30 Jun", m: 5, d: 30, activity: "FGD" },
+        { day: 4, date: "1 Jul", m: 6, d: 1, activity: "Diskusi + Gladi" },
+        { day: 5, date: "2 Jul", m: 6, d: 2, activity: "Pembukaan" },
+        { day: 6, date: "3 Jul", m: 6, d: 3, activity: "QRIS UMKM 1" },
+        { day: 7, date: "4 Jul", m: 6, d: 4, activity: "QRIS UMKM 2" },
+        { day: 8, date: "5 Jul", m: 6, d: 5, activity: "QRIS UMKM 3" },
+        { day: 9, date: "6 Jul", m: 6, d: 6, activity: "Diskusi Sertif Halal" },
+        { day: 10, date: "7 Jul", m: 6, d: 7, activity: "Persiapan Halal" },
+        { day: 11, date: "8 Jul", m: 6, d: 8, activity: "Gladi Halal" },
+        { day: 12, date: "9 Jul", m: 6, d: 9, activity: "Sertifikasi Halal" },
+        { day: 13, date: "10 Jul", m: 6, d: 10, activity: "Rapat EFC" },
+        { day: 14, date: "11 Jul", m: 6, d: 11, activity: "Persiapan EFC" },
+        { day: 15, date: "12 Jul", m: 6, d: 12, activity: "Observasi EFC" },
+        { day: 16, date: "13 Jul", m: 6, d: 13, activity: "EFC 1" },
+        { day: 17, date: "14 Jul", m: 6, d: 14, activity: "Rapat Eco Green" },
+        { day: 18, date: "15 Jul", m: 6, d: 15, activity: "Persiapan Eco Green" },
+        { day: 19, date: "16 Jul", m: 6, d: 16, activity: "Gladi Eco Green" },
+        { day: 20, date: "17 Jul", m: 6, d: 17, activity: "Acara Eco Green" },
+        { day: 21, date: "18 Jul", m: 6, d: 18, activity: "Evaluasi Proker" },
+        { day: 22, date: "19 Jul", m: 6, d: 19, activity: "Luaran KKN 1" },
+        { day: 23, date: "20 Jul", m: 6, d: 20, activity: "Luaran KKN 2" },
+        { day: 24, date: "21 Jul", m: 6, d: 21, activity: "Diskusi Penutupan" },
+        { day: 25, date: "22 Jul", m: 6, d: 22, activity: "Persiapan Penutupan" },
+        { day: 26, date: "23 Jul", m: 6, d: 23, activity: "EFC 5" },
+        { day: 27, date: "24 Jul", m: 6, d: 24, activity: "Gladi Penutupan" },
+        { day: 28, date: "25 Jul", m: 6, d: 25, activity: "Penutupan" },
+        { day: 29, date: "26 Jul", m: 6, d: 26, activity: "Pulang" }
     ];
 
     let dataAbsensi = JSON.parse(localStorage.getItem('kkn_absensi')) || {};
     let dataTamu = JSON.parse(localStorage.getItem('kkn_tamu')) || [];
+    let dataNotulensi = JSON.parse(localStorage.getItem('kkn_notulensi')) || [];
 
-    function switchTab(tabId) {
-        document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
-        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-        document.getElementById(`tab-${tabId}`).classList.add('active');
-        if(event) event.currentTarget.classList.add('active');
+    function toggleSidebar() {
+        document.getElementById('sidebar').classList.toggle('open');
+        document.getElementById('sidebar-overlay').classList.toggle('show');
     }
 
-    function toggleAlasan() {
-        const status = document.getElementById('pilihStatus').value;
-        const grupAlasan = document.getElementById('grupAlasan');
-        if (status === 'Izin' || status === 'Sakit') {
-            grupAlasan.style.display = 'block';
-        } else {
-            grupAlasan.style.display = 'none';
-            document.getElementById('inputAlasan').value = '';
-        }
+    function switchTab(tabId, el) {
+        document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+        document.getElementById(`tab-${tabId}`).classList.add('active');
+        
+        document.querySelectorAll('.sidebar-link').forEach(btn => btn.classList.remove('active'));
+        if(el) el.classList.add('active');
+
+        const judul = document.getElementById('judul-halaman');
+        if (tabId === 'absensi') judul.innerText = 'Absensi Harian';
+        else if (tabId === 'bukutamu') judul.innerText = 'Buku Tamu';
+        else if (tabId === 'notulensi') judul.innerText = 'Notulensi Rapat';
+
+        if(window.innerWidth <= 768) toggleSidebar();
     }
 
     function initApp() {
@@ -365,16 +496,26 @@
             selectHari.disabled = true;
         }
 
+        document.getElementById('tglNotulensi').valueAsDate = new Date();
+
         renderTabelAbsensi();
         renderTabelTamu();
+        renderTabelNotulensi();
         connectMQTT(); 
+    }
+
+    function toggleAlasan() {
+        const status = document.getElementById('pilihStatus').value;
+        const grupAlasan = document.getElementById('grupAlasan');
+        if (status === 'Izin' || status === 'Sakit') { grupAlasan.style.display = 'block'; } 
+        else { grupAlasan.style.display = 'none'; document.getElementById('inputAlasan').value = ''; }
     }
 
     function renderTabelAbsensi() {
         const headerHari = document.getElementById('headerHari');
-        headerHari.innerHTML = '<th>Nama Anggota</th>';
+        headerHari.innerHTML = '<th>Nama</th>';
         agendaKKN.forEach(item => { 
-            headerHari.innerHTML += `<th title="${item.activity}"><span class="desktop-text">Day ${item.day}</span><span class="mobile-text">D${item.day}</span><span class="hari-info">${item.date}</span></th>`; 
+            headerHari.innerHTML += `<th title="${item.activity}"><span class="desktop-text">D${item.day}</span><span class="mobile-text">D${item.day}</span><span class="hari-info">${item.date}</span></th>`; 
         });
 
         const bodyAbsensi = document.getElementById('bodyAbsensi');
@@ -411,8 +552,7 @@
         const alasan = document.getElementById('inputAlasan').value.trim();
         
         if (dataAbsensi[nama] && dataAbsensi[nama][hari]) {
-            alert(`⚠️ Gagal! ${nama} sudah melakukan pengisian absensi untuk Day ${hari} hari ini.`);
-            return;
+            alert(`⚠️ Gagal! ${nama} sudah absensi untuk Day ${hari}.`); return;
         }
 
         if (!dataAbsensi[nama]) dataAbsensi[nama] = {};
@@ -423,35 +563,19 @@
 
         document.getElementById('inputAlasan').value = '';
         renderTabelAbsensi();
-        alert(`✅ Sukses! ${nama} berhasil mengisi absensi.`);
-    }
-
-    function simpanTamu() {
-        const nama = document.getElementById('namaTamu').value.trim();
-        const instansi = document.getElementById('instansiTamu').value.trim();
-        const keperluan = document.getElementById('keperluanTamu').value.trim();
-        if(!nama || !instansi || !keperluan) { alert("⚠️ Harap isi semua kolom buku tamu!"); return; }
-
-        const waktu = new Date().toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' });
-        dataTamu.push({ id: Date.now(), waktu, nama, instansi, keperluan });
-        
-        localStorage.setItem('kkn_tamu', JSON.stringify(dataTamu));
-        publishToMQTT(topicTamu, dataTamu); 
-
-        document.getElementById('namaTamu').value = ''; document.getElementById('instansiTamu').value = ''; document.getElementById('keperluanTamu').value = '';
-        renderTabelTamu();
+        alert(`✅ Absen tersimpan!`);
     }
 
     function renderTabelTamu() {
         const bodyTamu = document.getElementById('bodyTamu');
         bodyTamu.innerHTML = '';
-        if(dataTamu.length === 0) { bodyTamu.innerHTML = `<tr><td colspan="5" class="belum" style="padding: 30px;">Belum ada catatan kunjungan tamu.</td></tr>`; return; }
+        if(dataTamu.length === 0) { bodyTamu.innerHTML = `<tr><td colspan="5" class="belum" style="padding: 20px;">Belum ada tamu.</td></tr>`; return; }
 
         const reversedData = [...dataTamu].reverse();
         reversedData.forEach(tamu => {
             bodyTamu.innerHTML += `
                 <tr>
-                    <td style="color: #6c757d; font-size: 12px;">${tamu.waktu}</td>
+                    <td style="color: #6c757d;">${tamu.waktu}</td>
                     <td><strong>${tamu.nama}</strong></td>
                     <td>${tamu.instansi}</td>
                     <td>${tamu.keperluan}</td>
@@ -461,8 +585,24 @@
         });
     }
 
+    function simpanTamu() {
+        const nama = document.getElementById('namaTamu').value.trim();
+        const instansi = document.getElementById('instansiTamu').value.trim();
+        const keperluan = document.getElementById('keperluanTamu').value.trim();
+        if(!nama || !instansi || !keperluan) { alert("⚠️ Isi semua kolom!"); return; }
+
+        const waktu = new Date().toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'short' });
+        dataTamu.push({ id: Date.now(), waktu, nama, instansi, keperluan });
+        
+        localStorage.setItem('kkn_tamu', JSON.stringify(dataTamu));
+        publishToMQTT(topicTamu, dataTamu); 
+
+        document.getElementById('namaTamu').value = ''; document.getElementById('instansiTamu').value = ''; document.getElementById('keperluanTamu').value = '';
+        renderTabelTamu();
+    }
+
     function hapusTamu(id) {
-        if(confirm("Apakah Anda yakin ingin menghapus catatan tamu ini?")) {
+        if(confirm("Hapus tamu ini?")) {
             dataTamu = dataTamu.filter(tamu => tamu.id !== id);
             localStorage.setItem('kkn_tamu', JSON.stringify(dataTamu));
             publishToMQTT(topicTamu, dataTamu); 
@@ -470,18 +610,83 @@
         }
     }
 
-    // --- FUNGSI EXPORT KE EXCEL (XLSX) ---
+    function formatTextToHTML(text) {
+        return text ? text.replace(/\n/g, "<br>") : "-";
+    }
+
+    function renderTabelNotulensi() {
+        const bodyNotulensi = document.getElementById('bodyNotulensi');
+        bodyNotulensi.innerHTML = '';
+        if(dataNotulensi.length === 0) { bodyNotulensi.innerHTML = `<tr><td colspan="10" class="belum" style="padding: 20px;">Belum ada notulensi.</td></tr>`; return; }
+
+        const reversedData = [...dataNotulensi].reverse();
+        reversedData.forEach(note => {
+            bodyNotulensi.innerHTML += `
+                <tr>
+                    <td style="font-weight: 600;">${note.tanggal}</td>
+                    <td><strong>${note.topik}</strong></td>
+                    <td style="text-align: left;">${formatTextToHTML(note.acara)}</td>
+                    <td style="text-align: left;">${formatTextToHTML(note.humas)}</td>
+                    <td style="text-align: left;">${formatTextToHTML(note.pdd)}</td>
+                    <td style="text-align: left;">${formatTextToHTML(note.konsumsi)}</td>
+                    <td style="text-align: left;">${formatTextToHTML(note.perkap)}</td>
+                    <td style="text-align: left; background:#f8f9fa;">${formatTextToHTML(note.hasil)}</td>
+                    <td style="text-align: left; color:#b02a37; font-weight:500;">${formatTextToHTML(note.tindak)}</td>
+                    <td><button class="btn-delete" onclick="hapusNotulensi(${note.id})">Hapus</button></td>
+                </tr>
+            `;
+        });
+    }
+
+    function simpanNotulensi() {
+        const tgl = document.getElementById('tglNotulensi').value;
+        const topik = document.getElementById('topikNotulensi').value.trim();
+        
+        if(!tgl || !topik) { alert("⚠️ Tanggal & Agenda wajib diisi!"); return; }
+
+        const obj = {
+            id: Date.now(),
+            tanggal: tgl,
+            topik: topik,
+            acara: document.getElementById('sieAcara').value.trim(),
+            humas: document.getElementById('sieHumas').value.trim(),
+            pdd: document.getElementById('siePDD').value.trim(),
+            konsumsi: document.getElementById('sieKonsumsi').value.trim(),
+            perkap: document.getElementById('siePerkap').value.trim(),
+            hasil: document.getElementById('hasilRapat').value.trim(),
+            tindak: document.getElementById('tindakLanjut').value.trim()
+        };
+
+        dataNotulensi.push(obj);
+        
+        localStorage.setItem('kkn_notulensi', JSON.stringify(dataNotulensi));
+        publishToMQTT(topicNotulensi, dataNotulensi); 
+
+        // Reset textareas
+        ['topikNotulensi','sieAcara','sieHumas','siePDD','sieKonsumsi','siePerkap','hasilRapat','tindakLanjut'].forEach(id => {
+            document.getElementById(id).value = '';
+        });
+        
+        renderTabelNotulensi();
+        alert("✅ Notulensi tersimpan!");
+    }
+
+    function hapusNotulensi(id) {
+        if(confirm("Hapus notulensi ini?")) {
+            dataNotulensi = dataNotulensi.filter(n => n.id !== id);
+            localStorage.setItem('kkn_notulensi', JSON.stringify(dataNotulensi));
+            publishToMQTT(topicNotulensi, dataNotulensi); 
+            renderTabelNotulensi();
+        }
+    }
+
     function backupData(tipe) {
-        let wb = XLSX.utils.book_new(); // Buat workbook excel baru
+        let wb = XLSX.utils.book_new(); 
         
         if(tipe === 'absensi') { 
-            // Buat Array untuk Header Kolom Absensi
             let header = ["No", "Nama Anggota"];
-            agendaKKN.forEach(item => {
-                header.push(`Day ${item.day} (${item.date})`);
-            });
+            agendaKKN.forEach(item => { header.push(`Day ${item.day} (${item.date})`); });
             
-            // Masukkan data ke format Array 2D
             let ws_data = [header];
             daftarNama.forEach((nama, index) => {
                 let row = [index + 1, nama];
@@ -492,66 +697,61 @@
                         if (typeof statusData === 'object') {
                             isiSel = statusData.status;
                             if(statusData.alasan) isiSel += ` (${statusData.alasan})`;
-                        } else {
-                            isiSel = statusData;
-                        }
+                        } else { isiSel = statusData; }
                     }
                     row.push(isiSel);
                 });
                 ws_data.push(row);
             });
-
-            // Convert array ke worksheet dan tambahkan ke file excel
             let ws = XLSX.utils.aoa_to_sheet(ws_data);
             XLSX.utils.book_append_sheet(wb, ws, "Rekap Absensi");
-            XLSX.writeFile(wb, "Rekap_Absensi_KKN_02_BatahTimur.xlsx");
+            XLSX.writeFile(wb, "Rekap_Absensi_KKN_02.xlsx");
             
-        } else {
-            // Pemrosesan untuk Buku Tamu
+        } else if (tipe === 'tamu') {
             let header = ["No", "Waktu Kunjungan", "Nama Tamu / Rombongan", "Asal / Instansi", "Keperluan"];
             let ws_data = [header];
-            
             dataTamu.forEach((tamu, index) => {
-                ws_data.push([
-                    index + 1,
-                    tamu.waktu,
-                    tamu.nama,
-                    tamu.instansi,
-                    tamu.keperluan
-                ]);
+                ws_data.push([ index + 1, tamu.waktu, tamu.nama, tamu.instansi, tamu.keperluan ]);
             });
-
             let ws = XLSX.utils.aoa_to_sheet(ws_data);
             XLSX.utils.book_append_sheet(wb, ws, "Buku Tamu");
-            XLSX.writeFile(wb, "Buku_Tamu_KKN_02_BatahTimur.xlsx");
+            XLSX.writeFile(wb, "Buku_Tamu_KKN_02.xlsx");
+
+        } else if (tipe === 'notulensi') {
+            let header = ["No", "Tanggal Rapat", "Agenda", "Sie Acara", "Sie Humas", "Sie PDD", "Sie Konsumsi", "Sie Perkap", "Keputusan Rapat", "Tindak Lanjut"];
+            let ws_data = [header];
+            dataNotulensi.forEach((note, index) => {
+                ws_data.push([ index + 1, note.tanggal, note.topik, note.acara, note.humas, note.pdd, note.konsumsi, note.perkap, note.hasil, note.tindak ]);
+            });
+            let ws = XLSX.utils.aoa_to_sheet(ws_data);
+            XLSX.utils.book_append_sheet(wb, ws, "Notulensi Rapat");
+            XLSX.writeFile(wb, "Notulensi_Rapat_KKN_02.xlsx");
         }
     }
 
     function resetData(tipe) {
-        let peringatan = tipe === 'absensi' ? "SEMUA data Absensi" : "SEMUA data Buku Tamu";
-        let inputPassword = prompt(`Masukkan KODE RAHASIA untuk mereset ${peringatan}:`);
+        let peringatan = "";
+        if (tipe === 'absensi') peringatan = "Data Absensi";
+        else if (tipe === 'tamu') peringatan = "Data Buku Tamu";
+        else if (tipe === 'notulensi') peringatan = "Data Notulensi Rapat";
+
+        let inputPassword = prompt(`Masukkan KODE untuk mereset ${peringatan}:`);
         
         if (inputPassword === null) return;
-        
-        if (inputPassword !== KODE_RAHASIA_RESET) {
-            alert("❌ Gagal! Kode yang Anda masukkan salah.");
-            return;
-        }
+        if (inputPassword !== KODE_RAHASIA_RESET) { alert("❌ Kode salah."); return; }
 
-        if(confirm(`⚠️ PERINGATAN TERAKHIR!\nAnda yakin ingin menghapus ${peringatan} secara permanen? Data yang dihapus tidak dapat dikembalikan lagi di semua perangkat.`)) {
+        if(confirm(`⚠️ Hapus ${peringatan} secara permanen di semua perangkat?`)) {
             if(tipe === 'absensi') { 
-                dataAbsensi = {};
-                localStorage.removeItem('kkn_absensi'); 
-                publishToMQTT(topicAbsensi, dataAbsensi); 
-                renderTabelAbsensi(); 
-            } 
-            else { 
-                dataTamu = [];
-                localStorage.removeItem('kkn_tamu'); 
-                publishToMQTT(topicTamu, dataTamu); 
-                renderTabelTamu(); 
+                dataAbsensi = {}; localStorage.removeItem('kkn_absensi'); 
+                publishToMQTT(topicAbsensi, dataAbsensi); renderTabelAbsensi(); 
+            } else if (tipe === 'tamu') { 
+                dataTamu = []; localStorage.removeItem('kkn_tamu'); 
+                publishToMQTT(topicTamu, dataTamu); renderTabelTamu(); 
+            } else if (tipe === 'notulensi') {
+                dataNotulensi = []; localStorage.removeItem('kkn_notulensi'); 
+                publishToMQTT(topicNotulensi, dataNotulensi); renderTabelNotulensi();
             }
-            alert("✅ Reset berhasil dilakukan.");
+            alert("✅ Reset berhasil.");
         }
     }
 
