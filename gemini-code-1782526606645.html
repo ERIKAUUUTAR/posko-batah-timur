@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Sistem Informasi Posko KKN Kelompok 02</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #005A9C;
+            --primary-hover: #003F70;
+            --secondary: #f4f7f6;
+            --success: #198754;
+            --success-hover: #146c43;
+            --warning: #ffc107;
+            --danger: #dc3545;
+            --danger-hover: #b02a37;
+            --info: #0dcaf0;
+            --dark: #2c3e50;
+            --light-bg: #eef2f5;
+            --card-bg: #ffffff;
+            --border-radius: 12px;
+        }
+
+        body { font-family: 'Poppins', sans-serif; background-color: var(--light-bg); color: var(--dark); margin: 0; padding: 0; }
+
+        .header-section { background-color: var(--primary); color: white; padding: 20px; display: flex; align-items: center; justify-content: center; gap: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .logo-kkn { width: 70px; height: 70px; object-fit: contain; background-color: transparent; border-radius: 50%; padding: 2px; }
+        .header-text { text-align: left; }
+        .header-text h1 { margin: 0; font-size: 1.2rem; font-weight: 700; line-height: 1.2; }
+        .header-text h2 { margin: 2px 0 0 0; font-size: 0.9rem; font-weight: 400; color: #d1e7dd; }
+
+        .hero-section { max-width: 1000px; margin: 20px auto; padding: 0 15px; }
+        .hero-image { width: 100%; height: 300px; object-fit: cover; object-position: center; border-radius: var(--border-radius); box-shadow: 0 4px 10px rgba(0,0,0,0.15); }
+
+        .container { max-width: 1000px; margin: 0 auto 40px auto; background: var(--card-bg); padding: 25px; border-radius: var(--border-radius); box-shadow: 0 5px 15px rgba(0,0,0,0.05); width: calc(100% - 30px); box-sizing: border-box; }
+        
+        .tabs { display: flex; margin-bottom: 25px; background: #f8f9fa; border-radius: 8px; padding: 5px; gap: 5px; }
+        .tab-btn { flex: 1; background: none; border: none; padding: 12px; font-size: 14px; font-weight: 600; cursor: pointer; color: #6c757d; border-radius: 6px; transition: all 0.3s ease; }
+        .tab-btn:hover { color: var(--primary); background-color: #e9ecef; }
+        .tab-btn.active { color: white; background-color: var(--primary); box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.4s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        h3.section-title { text-align: center; color: var(--primary); margin-bottom: 20px; font-size: 1.3rem; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 6px; font-weight: 600; font-size: 13px; color: #495057; }
+        select, input { width: 100%; padding: 12px 15px; border: 1px solid #ced4da; border-radius: 8px; font-size: 14px; box-sizing: border-box; font-family: inherit; transition: border-color 0.3s; }
+        select:focus, input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(0, 90, 156, 0.1); }
+        select:disabled { background-color: #e2e8f0; color: #64748b; cursor: not-allowed; }
+        
+        button { width: 100%; padding: 12px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 15px; transition: all 0.3s; font-family: inherit; }
+        .btn-checkin { background-color: var(--success); color: white; margin-top: 10px; }
+        .btn-checkin:hover { background-color: var(--success-hover); transform: translateY(-2px); }
+        .action-buttons { display: flex; justify-content: flex-end; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
+        .btn-reset { background-color: var(--danger); color: white; width: auto; padding: 8px 15px; font-size: 13px; }
+        .btn-reset:hover { background-color: var(--danger-hover); }
+        .btn-backup { background-color: var(--info); color: white; width: auto; padding: 8px 15px; font-size: 13px; }
+        .btn-delete { background-color: var(--danger); color: white; padding: 6px 12px; font-size: 12px; border-radius: 4px; }
+
+        .table-responsive { overflow-x: auto; border-radius: 8px; box-shadow: 0 0 0 1px #dee2e6; }
+        table { width: 100%; border-collapse: collapse; background: white; }
+        #tabelAbsensi { min-width: 2500px; }
+        #tabelTamu { min-width: 700px; }
+        th, td { border: 1px solid #dee2e6; padding: 12px 10px; text-align: center; font-size: 13px; vertical-align: middle; }
+        th { background-color: var(--primary); color: white; position: sticky; top: 0; z-index: 2; font-weight: 500; }
+        #tabelAbsensi td:first-child, #tabelAbsensi th:first-child { position: sticky; left: 0; font-weight: 600; z-index: 3; background-color: #f8f9fa; border-right: 2px solid #dee2e6; min-width: 130px; text-align: left; }
+        #tabelAbsensi th:first-child { background-color: var(--primary); color: white; z-index: 4; text-align: center;}
+        
+        .hari-info { font-size: 10px; font-weight: 400; display: block; margin-top: 4px; color: #a1c6ea; }
+        .status-hadir { background-color: #d1e7dd; color: #0f5132; font-weight: 600; }
+        .status-izin { background-color: #fff3cd; color: #664d03; font-weight: 600; }
+        .status-sakit { background-color: #f8d7da; color: #842029; font-weight: 600; }
+        .status-alfa { background-color: #e2e3e5; color: #41464b; font-weight: 600; }
+        .belum { color: #adb5bd; }
+        .teks-alasan { font-size: 10px; font-weight: 400; color: #6c757d; display: block; margin-top: 5px; font-style: italic; line-height: 1.3; }
+        
+        .desktop-text { display: block; }
+        .mobile-text { display: none; }
+
+        @media (max-width: 768px) {
+            .header-section { flex-direction: column; text-align: center; padding: 15px; }
+            .header-text { text-align: center; }
+            .header-text h1 { font-size: 1rem; }
+            .header-text h2 { font-size: 0.8rem; }
+            .hero-image { height: 180px; }
+            .container { padding: 15px; margin-top: 10px; width: 95%; }
+            .tabs { flex-direction: column; }
+            .action-buttons { justify-content: stretch; }
+            .btn-reset, .btn-backup { width: 100%; text-align: center; margin-bottom: 5px; }
+
+            .desktop-text { display: none; }
+            .mobile-text { display: block; font-weight: bold; font-size: 13px; }
+
+            #tabelAbsensi, #tabelAbsensi thead, #tabelAbsensi tbody, #tabelAbsensi tr { display: block; width: 100% !important; }
+            #tabelAbsensi thead { display: none; }
+            
+            #tabelAbsensi tr { background: #ffffff; margin-bottom: 25px; border: 1px solid #cbd5e1; border-radius: 10px; padding: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); text-align: left; }
+            #tabelAbsensi td:first-child { display: block; width: 100% !important; position: static !important; background: transparent !important; font-size: 15px; color: var(--primary); border: none; border-bottom: 2px solid #e2e8f0; padding: 0 0 8px 0; margin-bottom: 12px; font-weight: 700; }
+            #tabelAbsensi td:not(:first-child) { display: inline-flex; flex-direction: column; align-items: center; justify-content: center; width: calc(20% - 6px); min-width: 48px; height: 48px; margin: 3px; padding: 4px 2px; border: 1px solid #e2e8f0; border-radius: 6px; box-sizing: border-box; vertical-align: top; }
+            #tabelAbsensi td:not(:first-child)::before { content: attr(data-day); display: block; font-size: 10px; font-weight: 600; margin-bottom: 1px; opacity: 0.6; line-height: 1; color: #555; }
+            .teks-alasan { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+<header class="header-section">
+    <img src="https://iili.io/CA65V7S.png" alt="Logo KKN" class="logo-kkn">
+    <div class="header-text">
+        <h1>KULIAH KERJA NYATA REGULER</h1>
+        <h2>KELOMPOK 02 DESA BATAH TIMUR</h2>
+    </div>
+</header>
+
+<div class="hero-section">
+    <img src="https://iili.io/CA6UkMu.png" alt="Foto Bersama KKN" class="hero-image">
+</div>
+
+<div class="container">
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('absensi')">📅 Absensi Harian</button>
+        <button class="tab-btn" onclick="switchTab('bukutamu')">📖 Buku Tamu</button>
+    </div>
+
+    <div id="tab-absensi" class="tab-content active">
+        <h3 class="section-title">Form Check-In Absensi</h3>
+
+        <div class="form-group">
+            <label for="pilihNama">Nama Anggota:</label>
+            <select id="pilihNama"></select>
+        </div>
+
+        <div class="form-group">
+            <label for="pilihHari">Pilih Jadwal Kegiatan (Dikunci Otomatis Sesuai Tanggal HP):</label>
+            <select id="pilihHari"></select>
+        </div>
+
+        <div class="form-group">
+            <label for="pilihStatus">Keterangan / Status:</label>
+            <select id="pilihStatus" onchange="toggleAlasan()">
+                <option value="Hadir">Hadir ✔️</option>
+                <option value="Izin">Izin (Ada keperluan lain)</option>
+                <option value="Sakit">Sakit 🤒</option>
+                <option value="Alfa">Tanpa Keterangan (Alfa) ❌</option>
+            </select>
+        </div>
+
+        <div class="form-group" id="grupAlasan" style="display: none;">
+            <label for="inputAlasan">Ketik Alasan Spesifik (Opsional):</label>
+            <input type="text" id="inputAlasan" placeholder="Contoh: Pulang ke rumah, bimbingan kampus, demam...">
+        </div>
+
+        <button class="btn-checkin" onclick="simpanAbsen()">Simpan Data Absen 💾</button>
+
+        <hr style="margin: 35px 0; border: 0; border-top: 2px dashed #dee2e6;">
+
+        <h3 class="section-title">Rekapitulasi Kehadiran</h3>
+        <div class="action-buttons">
+            <button class="btn-backup" onclick="backupData('absensi')">⬇️ Download Rekap (Excel/JSON)</button>
+            <button class="btn-reset" onclick="resetData('absensi')">🗑️ Reset Absensi</button>
+        </div>
+        
+        <div class="table-responsive">
+            <table id="tabelAbsensi">
+                <thead>
+                    <tr id="headerHari">
+                        <th>Nama Anggota</th>
+                    </tr>
+                </thead>
+                <tbody id="bodyAbsensi"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="tab-bukutamu" class="tab-content">
+        <h3 class="section-title">Form Kunjungan Tamu</h3>
+
+        <div class="form-group">
+            <label for="namaTamu">Nama Tamu / Rombongan:</label>
+            <input type="text" id="namaTamu" placeholder="Contoh: Pak Kepala Desa / DPL">
+        </div>
+        <div class="form-group">
+            <label for="instansiTamu">Asal / Instansi:</label>
+            <input type="text" id="instansiTamu" placeholder="Contoh: Warga Dusun A / Kampus UTM">
+        </div>
+        <div class="form-group">
+            <label for="keperluanTamu">Keperluan Kunjungan:</label>
+            <input type="text" id="keperluanTamu" placeholder="Contoh: Evaluasi proker / Silaturahmi">
+        </div>
+
+        <button class="btn-checkin" onclick="simpanTamu()" style="background-color: var(--primary);">Catat Buku Tamu 📝</button>
+
+        <hr style="margin: 35px 0; border: 0; border-top: 2px dashed #dee2e6;">
+
+        <h3 class="section-title">Daftar Riwayat Tamu</h3>
+        <div class="action-buttons">
+            <button class="btn-backup" onclick="backupData('tamu')">⬇️ Download Buku Tamu</button>
+            <button class="btn-reset" onclick="resetData('tamu')">🗑️ Bersihkan Riwayat</button>
+        </div>
+
+        <div class="table-responsive">
+            <table id="tabelTamu">
+                <thead>
+                    <tr>
+                        <th style="width: 150px;">Waktu Kunjungan</th>
+                        <th>Nama Tamu</th>
+                        <th>Asal / Instansi</th>
+                        <th>Keperluan</th>
+                        <th style="width: 80px;">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody id="bodyTamu"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    const daftarNama = [
+        "Al Hambra Bilal M.", "Firdaushil Hasanah", "Rizal Umami", "Musdalifah Zahratul H.",
+        "Gibran Thoifury", "Afifah Dwi Widyastuti", "Ari Dwi Yulianton", "Marcella Maydita",
+        "Luluk Chusniatus P.", "Kartika Fitri W.", "Abdillah Hanif", "Maharani Putri S.",
+        "Muhamad Firda Aqil F.", "Cici Nur Ausyah", "Ana Safitri", "Eka Putpitasari", "Erika Utari"
+    ];
+
+    // Ditambahkan konfigurasi bulan (m) dan tanggal (d) asli untuk sinkronisasi otomatis
+    // m: 5 artinya Juni (karena dimulai dari 0), m: 6 artinya Juli
+    const agendaKKN = [
+        { day: 1, date: "28 Juni", m: 5, d: 28, activity: "Keberangkatan" },
+        { day: 2, date: "29 Juni", m: 5, d: 29, activity: "Sowan" },
+        { day: 3, date: "30 Juni", m: 5, d: 30, activity: "Observasi lingkungan dan FGD" },
+        { day: 4, date: "1 Juli", m: 6, d: 1, activity: "Q time + diskusi + gladi" },
+        { day: 5, date: "2 Juli", m: 6, d: 2, activity: "Pembukaan" },
+        { day: 6, date: "3 Juli", m: 6, d: 3, activity: "Visit QRIS GOES TO UMKM (2 dusun)" },
+        { day: 7, date: "4 Juli", m: 6, d: 4, activity: "Visit QRIS GOES TO UMKM (2 dusun)" },
+        { day: 8, date: "5 Juli", m: 6, d: 5, activity: "Visit QRIS GOES TO UMKM (1 dusun)" },
+        { day: 9, date: "6 Juli", m: 6, d: 6, activity: "Diskusi proker SERTIFIKASI HALAL" },
+        { day: 10, date: "7 Juli", m: 6, d: 7, activity: "Persiapan SERTIFIKASI HALAL UMKM" },
+        { day: 11, date: "8 Juli", m: 6, d: 8, activity: "Gladi bersih SERTIFIKASI HALAL" },
+        { day: 12, date: "9 Juli", m: 6, d: 9, activity: "Pelaksanaan SERTIFIKASI HALAL UMKM" },
+        { day: 13, date: "10 Juli", m: 6, d: 10, activity: "Evaluasi & Rapat ENGLISH FUN CLASS" },
+        { day: 14, date: "11 Juli", m: 6, d: 11, activity: "Persiapan ENGLISH FUN CLASS" },
+        { day: 15, date: "12 Juli", m: 6, d: 12, activity: "Observasi ENGLISH FUN CLASS" },
+        { day: 16, date: "13 Juli", m: 6, d: 13, activity: "ENGLISH FUN CLASS 1 & Pentas Seni" },
+        { day: 17, date: "14 Juli", m: 6, d: 14, activity: "Rapat BERSIH LINGKUNGAN & EFC 2" },
+        { day: 18, date: "15 Juli", m: 6, d: 15, activity: "Persiapan BERSIH LINGKUNGAN & EFC 3" },
+        { day: 19, date: "16 Juli", m: 6, d: 16, activity: "Gladi bersih BERSIH LINGKUNGAN" },
+        { day: 20, date: "17 Juli", m: 6, d: 17, activity: "Pelaksanaan BERSIH LINGKUNGAN" },
+        { day: 21, date: "18 Juli", m: 6, d: 18, activity: "Evaluasi BERSIH LINGKUNGAN & EFC 4" },
+        { day: 22, date: "19 Juli", m: 6, d: 19, activity: "Pengerjaan luaran KKN" },
+        { day: 23, date: "20 Juli", m: 6, d: 20, activity: "Pengerjaan luaran KKN" },
+        { day: 24, date: "21 Juli", m: 6, d: 21, activity: "Diskusi penutupan" },
+        { day: 25, date: "22 Juli", m: 6, d: 22, activity: "Persiapan penutupan" },
+        { day: 26, date: "23 Juli", m: 6, d: 23, activity: "ENGLISH FUN CLASS 5 & Pentas Seni" },
+        { day: 27, date: "24 Juli", m: 6, d: 24, activity: "Gladi bersih penutupan" },
+        { day: 28, date: "25 Juli", m: 6, d: 25, activity: "Penutupan dan bersih-bersih" },
+        { day: 29, date: "26 Juli", m: 6, d: 26, activity: "PULANKKK" }
+    ];
+
+    let dataAbsensi = JSON.parse(localStorage.getItem('kkn_absensi')) || {};
+    let dataTamu = JSON.parse(localStorage.getItem('kkn_tamu')) || [];
+
+    function switchTab(tabId) {
+        document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        document.getElementById(`tab-${tabId}`).classList.add('active');
+        if(event) event.currentTarget.classList.add('active');
+    }
+
+    function toggleAlasan() {
+        const status = document.getElementById('pilihStatus').value;
+        const grupAlasan = document.getElementById('grupAlasan');
+        if (status === 'Izin' || status === 'Sakit') {
+            grupAlasan.style.display = 'block';
+        } else {
+            grupAlasan.style.display = 'none';
+            document.getElementById('inputAlasan').value = '';
+        }
+    }
+
+    function initApp() {
+        const selectNama = document.getElementById('pilihNama');
+        selectNama.innerHTML = '';
+        daftarNama.forEach(nama => selectNama.add(new Option(nama, nama)));
+
+        const selectHari = document.getElementById('pilihHari');
+        selectHari.innerHTML = '';
+        agendaKKN.forEach(item => { selectHari.add(new Option(`Day ${item.day} (${item.date}) - ${item.activity}`, item.day)); });
+
+        // LOGIK SINKRONISASI TANGGAL HP otomatis
+        const today = new Date();
+        const currentMonth = today.getMonth();
+        const currentDate = today.getDate();
+        
+        // Cari apakah hari ini masuk dalam daftar tanggal KKN
+        const todayAgenda = agendaKKN.find(item => item.m === currentMonth && item.d === currentDate);
+        
+        if (todayAgenda) {
+            selectHari.value = todayAgenda.day;
+            selectHari.disabled = true; // Kunci input agar tidak bisa ganti hari manual saat hari H
+        }
+
+        renderTabelAbsensi();
+        renderTabelTamu();
+    }
+
+    function renderTabelAbsensi() {
+        const headerHari = document.getElementById('headerHari');
+        headerHari.innerHTML = '<th>Nama Anggota</th>';
+        agendaKKN.forEach(item => { headerHari.innerHTML += `<th title="${item.activity}">Day ${item.day}<span class="hari-info">${item.date}</span></th>`; });
+
+        const bodyAbsensi = document.getElementById('bodyAbsensi');
+        bodyAbsensi.innerHTML = '';
+        daftarNama.forEach(nama => {
+            let row = `<tr><td>${nama}</td>`;
+            agendaKKN.forEach(item => {
+                let statusData = dataAbsensi[nama] && dataAbsensi[nama][item.day] ? dataAbsensi[nama][item.day] : null;
+                let statusTeks = null; let alasanTeks = "";
+
+                if (statusData) {
+                    if (typeof statusData === 'object') { statusTeks = statusData.status; alasanTeks = statusData.alasan; } 
+                    else { statusTeks = statusData; }
+                }
+
+                let detailAlasan = alasanTeks ? `<span class="teks-alasan">"${alasanTeks}"</span>` : "";
+                let titleAttr = alasanTeks ? `title="Alasan: ${alasanTeks}"` : "";
+
+                if (statusTeks === 'Hadir') row += `<td class="status-hadir" data-day="${item.day}" ${titleAttr}><span class="desktop-text">Hadir</span><span class="mobile-text">H</span></td>`;
+                else if (statusTeks === 'Izin') row += `<td class="status-izin" data-day="${item.day}" ${titleAttr}><span class="desktop-text">Izin${detailAlasan}</span><span class="mobile-text">I</span></td>`;
+                else if (statusTeks === 'Sakit') row += `<td class="status-sakit" data-day="${item.day}" ${titleAttr}><span class="desktop-text">Sakit${detailAlasan}</span><span class="mobile-text">S</span></td>`;
+                else if (statusTeks === 'Alfa') row += `<td class="status-alfa" data-day="${item.day}" ${titleAttr}><span class="desktop-text">Alfa</span><span class="mobile-text">A</span></td>`;
+                else row += `<td class="belum" data-day="${item.day}"><span class="desktop-text">-</span><span class="mobile-text">-</span></td>`;
+            });
+            row += `</tr>`;
+            bodyAbsensi.innerHTML += row;
+        });
+    }
+
+    function simpanAbsen() {
+        const nama = document.getElementById('pilihNama').value;
+        const hari = document.getElementById('pilihHari').value;
+        const status = document.getElementById('pilihStatus').value;
+        const alasan = document.getElementById('inputAlasan').value.trim();
+        
+        // PROTEKSI ABSEN GANDA SINKRON TANGGAL
+        if (dataAbsensi[nama] && dataAbsensi[nama][hari]) {
+            alert(`⚠️ Gagal! ${nama} sudah melakukan pengisian absensi untuk Day ${hari} hari ini. Pengisian hanya diperbolehkan 1 kali saja.`);
+            return;
+        }
+
+        if (!dataAbsensi[nama]) dataAbsensi[nama] = {};
+        dataAbsensi[nama][hari] = { status: status, alasan: alasan };
+        localStorage.setItem('kkn_absensi', JSON.stringify(dataAbsensi));
+
+        document.getElementById('inputAlasan').value = '';
+        renderTabelAbsensi();
+        alert(`✅ Sukses! ${nama} berhasil mengisi absensi.`);
+    }
+
+    function simpanTamu() {
+        const nama = document.getElementById('namaTamu').value.trim();
+        const instansi = document.getElementById('instansiTamu').value.trim();
+        const keperluan = document.getElementById('keperluanTamu').value.trim();
+        if(!nama || !instansi || !keperluan) { alert("⚠️ Harap isi semua kolom buku tamu!"); return; }
+
+        const waktu = new Date().toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' });
+        dataTamu.push({ id: Date.now(), waktu, nama, instansi, keperluan });
+        localStorage.setItem('kkn_tamu', JSON.stringify(dataTamu));
+
+        document.getElementById('namaTamu').value = ''; document.getElementById('instansiTamu').value = ''; document.getElementById('keperluanTamu').value = '';
+        renderTabelTamu();
+    }
+
+    function renderTabelTamu() {
+        const bodyTamu = document.getElementById('bodyTamu');
+        bodyTamu.innerHTML = '';
+        if(dataTamu.length === 0) { bodyTamu.innerHTML = `<tr><td colspan="5" class="belum" style="padding: 30px;">Belum ada catatan kunjungan tamu.</td></tr>`; return; }
+
+        const reversedData = [...dataTamu].reverse();
+        reversedData.forEach(tamu => {
+            bodyTamu.innerHTML += `
+                <tr>
+                    <td style="color: #6c757d; font-size: 12px;">${tamu.waktu}</td>
+                    <td><strong>${tamu.nama}</strong></td>
+                    <td>${tamu.instansi}</td>
+                    <td>${tamu.keperluan}</td>
+                    <td><button class="btn-delete" onclick="hapusTamu(${tamu.id})">Hapus</button></td>
+                </tr>
+            `;
+        });
+    }
+
+    function hapusTamu(id) {
+        if(confirm("Apakah Anda yakin ingin menghapus catatan tamu ini?")) {
+            dataTamu = dataTamu.filter(tamu => tamu.id !== id);
+            localStorage.setItem('kkn_tamu', JSON.stringify(dataTamu));
+            renderTabelTamu();
+        }
+    }
+
+    function backupData(tipe) {
+        let data, namaFile;
+        if(tipe === 'absensi') { data = dataAbsensi; namaFile = "Backup_Absensi_KKN_02_BatahTimur.json"; } 
+        else { data = dataTamu; namaFile = "Backup_Buku_Tamu_KKN_02_BatahTimur.json"; }
+
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data));
+        const downloadAnchorNode = document.createElement('a');
+        downloadAnchorNode.setAttribute("href", dataStr);
+        downloadAnchorNode.setAttribute("download", namaFile);
+        document.body.appendChild(downloadAnchorNode);
+        downloadAnchorNode.click();
+        downloadAnchorNode.remove();
+    }
+
+    function resetData(tipe) {
+        let peringatan = tipe === 'absensi' ? "SEMUA data Absensi" : "SEMUA data Buku Tamu";
+        if(confirm(`⚠️ AWAS! Anda yakin ingin menghapus ${peringatan} secara permanen? Data yang dihapus tidak dapat dikembalikan.`)) {
+            if(tipe === 'absensi') { localStorage.removeItem('kkn_absensi'); dataAbsensi = {}; renderTabelAbsensi(); } 
+            else { localStorage.removeItem('kkn_tamu'); dataTamu = []; renderTabelTamu(); }
+        }
+    }
+
+    initApp();
+</script>
+</body>
+</html>
